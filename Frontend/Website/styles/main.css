@@ -9,6 +9,7 @@ body {
     position: relative;
     width: 500px;
     margin: 2em auto;
+    margin-top: 0;
 }
 
 .tabs {
@@ -17,7 +18,8 @@ body {
     padding: 0;
     display: flex;
 }
-.tabs .tabs_item{
+
+.tabs .tabs_item {
     border: 1px solid #ccc;
     line-height: 2.5;
     padding: 0 1em;
@@ -32,10 +34,15 @@ body {
 
 
 .tabs .tabs_item.active_tab {
-    background:white;
-    z-index:20;
+    background: white;
+    z-index: 20;
 }
 
+textarea {
+    resize: none;
+    outline: none;
+    width: 100%;
+}
 
 .panels {
     border: 1px solid #ccc;
@@ -43,9 +50,11 @@ body {
     position: relative;
     z-index: 10;
 }
+
 .panels .panels_item {
     position: absolute;
     left: -5000px;
+    width: 100%;
 }
 
 .panels .panels_item.active_pan {
@@ -58,5 +67,14 @@ body {
     color: white;
 }
 
+.output-terminals-container {
+    margin-top: 40px;
+}
 
 
+.open-file {
+    width: 0;
+}
+.open-file input {
+    width: 0;
+}

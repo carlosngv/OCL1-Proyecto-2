@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/yeti/bootstrap.min.css"
+        integrity="sha384-mLBxp+1RMvmQmXOjBzRjqqr0dP9VHU2tb3FK6VB0fJN/AOu7/y+CAeYeWJZ4b3ii" crossorigin="anonymous">
+    <link rel="stylesheet" href="Website/styles/main.css">
+    <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
+    <script src="Website/codemirror/lib/codemirror.js"></script>
+    <script src="Website/codemirror/mode/clike/clike.js"></script>
+    <link rel="stylesheet" href="Website/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="Website/codemirror/theme/dracula.css">
+    <script src="Website/codemirror/addon/edit/closebrackets.js"></script>
+    <title>Translator</title>
+</head>
+
+<body>
+    
+
+    <nav class="navbar navbar-expand-sm navbar-dark bg-primary fixed-top">
+        <a class="navbar-brand" href="#">Translator</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+            aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="icon">
+                            <i class="far fa-list-alt"></i>
+                        </span>
+                        Options
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <div class="dropdown-item" id="open" href="#">
+                            <label class="open-file">   
+                                <span>
+                                    <i class="far fa-folder-open"></i>
+                                </span>
+                                Open                         
+                                <input id="myFile" type="file"/>
+                            </label>
+                            
+                        </div>
+                        <a class="dropdown-item" id="new" href="#">
+                            <span class="icon">
+                                <i class="far fa-plus-square"></i>
+                            </span>
+                            New
+                        </a>
+                        <a class="dropdown-item"  href="#">
+                            <span class="icon">
+                                <i class="far fa-save"></i>
+                            </span>
+                            Save
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <span class="icon">
+                                <i class="far fa-save"></i>
+                            </span>
+                            Save as
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="icon">
+                            <i class="fas fa-file-download"></i>
+                        </span>
+                        Download
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="#">
+                            <span>
+                                <i class="far fa-folder-open"></i>
+                            </span>
+                            Both
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <span class="icon">
+                                <i class="fab fa-js"></i>
+                            </span>
+                            JavaScript
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <span class="icon">
+                                <i class="fab fa-python"></i>
+                            </span>
+                            Python
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <br>
+    <div class="container">
+        <div class="row row-content">
+            <div class="col-sm-6"></div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <span class="card-header bg-secondary">
+                        <i class="fas fa-user"></i> 201801434
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="row row-content">
+            <div class="col-sm-6">
+                <div class="tabs-container">
+                    <ul class="tabs" id="tabs">
+                        <li class="tabs_item active_tab">Tab 1</li>
+                    </ul>
+                    <div class="panels" id="panels">
+                        <div class="panels_item active_pan">
+                            <textarea id="editor" class="editor">
+
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="output-terminals-container">
+                    <div class="terminal-container">
+                        <textarea class="terminal" id="python-terminal" readonly cols="60" rows="10"
+                            placeholder="Python"></textarea>
+                    </div>
+                    <div class="terminal-container">
+                        <textarea class="terminal" id="js-terminal" readonly cols="60" rows="10"
+                            placeholder="JavaScript"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function newEditor() {
+            var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+                lineNumbers: true,
+                mode: "text/x-java",
+                matchBrackets: true,
+                theme: "dracula",
+                autoCloseBrackets: true
+            });
+            editor.setSize("470", "450");
+        }
+        newEditor();
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+    <script type="module" src="Website/js/main.js"></script>
+
+</body>
+
+</html>
