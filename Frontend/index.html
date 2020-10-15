@@ -13,12 +13,11 @@
     <link rel="stylesheet" href="Website/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="Website/codemirror/theme/dracula.css">
     <script src="Website/codemirror/addon/edit/closebrackets.js"></script>
+
     <title>Translator</title>
 </head>
 
 <body>
-    
-
     <nav class="navbar navbar-expand-sm navbar-dark bg-primary fixed-top">
         <a class="navbar-brand" href="#">Translator</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
@@ -37,14 +36,14 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <div class="dropdown-item" id="open" href="#">
-                            <label class="open-file">   
+                            <label class="open-file">
                                 <span>
                                     <i class="far fa-folder-open"></i>
                                 </span>
-                                Open                         
-                                <input id="myFile" type="file"/>
+                                Open
+                                <input id="myFile" type="file" />
                             </label>
-                            
+
                         </div>
                         <a class="dropdown-item" id="new" href="#">
                             <span class="icon">
@@ -52,7 +51,7 @@
                             </span>
                             New
                         </a>
-                        <a class="dropdown-item"  href="#">
+                        <a class="dropdown-item" href="#">
                             <span class="icon">
                                 <i class="far fa-save"></i>
                             </span>
@@ -111,6 +110,7 @@
             </div>
         </div>
     </div>
+    <div id="output"></div>
 
 
     <div class="container">
@@ -123,12 +123,13 @@
                     <div class="panels" id="panels">
                         <div class="panels_item active_pan">
                             <textarea id="editor" class="editor">
-
                             </textarea>
                         </div>
                     </div>
                 </div>
+                <button type="button" id="scan" class="btn-analyze btn btn-large btn-primary">Analizar</button>
             </div>
+
             <div class="col-sm-6">
                 <div class="output-terminals-container">
                     <div class="terminal-container">
@@ -143,20 +144,46 @@
             </div>
         </div>
     </div>
+    <p id="demo"></p>
+
 
     <script>
-        function newEditor() {
-            var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-                lineNumbers: true,
-                mode: "text/x-java",
-                matchBrackets: true,
-                theme: "dracula",
-                autoCloseBrackets: true
-            });
-            editor.setSize("470", "450");
+        const config = {
+            lineNumbers: true,
+            mode: "text/x-java",
+            matchBrackets: true,
+            theme: "dracula",
+            autoCloseBrackets: true,
+            autofocus: true,
+            lineWrapping: true
         }
-        newEditor();
+        const editor = CodeMirror.fromTextArea(document.getElementById("editor"), config);
+        editor.setSize("470", "450");
+
+        const scanButton = document.getElementById('scan')
+        scanButton.addEventListener("click", async () => {
+            let url = 'http://localhost:3000/scan';
+            let data = editor.getValue()
+            console.log(data)
+            let data2 = {
+                input: data,
+            }
+            console.log(data2)
+            await fetch(url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data2)
+            }).then(res => {
+                console.log("Request complete! response:", res.json());
+            }, err => {
+                console.log(err)
+            });
+        })
+
     </script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script>
@@ -166,8 +193,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
         integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
         crossorigin="anonymous"></script>
-    <script type="module" src="Website/js/main.js"></script>
-
+    <script type="module" src="Website/js/index.js"></script>
 </body>
 
 </html>

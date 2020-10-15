@@ -15,8 +15,6 @@ func main() {
 	http.Handle("/Website/styles/", http.StripPrefix("/Website/styles/", http.FileServer(http.Dir("Website/styles/"))))
 	http.Handle("/Website/js/", http.StripPrefix("/Website/js/", http.FileServer(http.Dir("Website/js/"))))
 	http.Handle("/Website/codemirror/", http.StripPrefix("/Website/codemirror/", http.FileServer(http.Dir("Website/codemirror/"))))
-
 	http.HandleFunc("/", index)
-	//router.PathPrefix("/").Handler(http.FileServer(rice.MustFindBox("website").HTTPBox()))
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3100", nil)
 }

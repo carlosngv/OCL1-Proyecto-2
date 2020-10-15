@@ -1,0 +1,176 @@
+
+------------------------- CLASES E INTERFAZ ------------------------------
+
+INICIO := SENTENCIA_CLASE LISTA_CLASES 'ultimo'
+        | SENTENCIA_INTERFAZ LISTA_INTERFACES 'ultimo' 
+
+SENTENCIA_CLASE := 'public' 'class' id '{' LISTA_DECLARACION_METODOS_FUNCIONES '}'
+
+LISTA_CLASES := SENTENCIA_CLASE LISTA_CLASES
+              | EPSILON
+
+SENTENCIA_INTERFAZ := 'public' 'interface' id '{' LISTA_DECLARACION_METODOS'}'  
+
+LISTA_INTERFACES := SENTENCIA_INTERFAZ LISTA_INTERFACES
+                  | EPSILON
+
+LISTA_SENTENCIAS := SENTENCIA 
+                  | SENTENCIA LISTA_SENTENCIAS 
+
+
+------------------------- METODOS Y FUNCIONES ------------------------------
+
+LISTA_DECLARACION_METODOS_FUNCIONES := DECLARACION_METODOS_FUNCIONES LISTA_DECLARACION_METODOS_FUNCIONES
+                                     | EPSILON
+
+LISTA_DECLARACION_METODOS := DECLARACION_METODO LISTA_DECLARACION_METODOS
+                           | EPSILON
+
+DECLARACION_METODOS_FUNCIONES := 'public' 'void' id '(' DECLARACION_PARAMETROS 
+                               | 'public' TIPO id '(' DECLARACION_PARAMETROS 
+
+DECLARACION_METODO := 'public' 'void' id '(' DECLARACION_PARAMETROS
+                     
+DECLARACION_PARAMETROS := TIPO id LISTA_PARAMETROS ')' LISTAINSTR_LLAVES
+                        | ')' LISTAINSTR_LLAVES
+                                
+LISTA_PARAMETROS =: ',' TIPO id LISTA_PARAMETROS
+                  | EPSILON  
+
+
+------------------------- TIPO ------------------------------
+
+TIPO := int 
+      | double
+      | char
+      | String
+      | boolean
+
+-------------------------  INSTRUCCIONES ------------------------------
+
+INSTRUCCION  := DECLARACION_VARIABLE;
+            | SENTENCIA_WHILE
+            | SENTENCIA_IF_ELSE
+            | SENTENCIA_FOR
+            | SENTENCIA_DO_WHILE
+            | SENTENCIA_PRINT
+            | ASIGNACION_SIMPLE
+            | SENTENCIA_CONTINUE
+            | SENTENCIA_BRAKE
+            | SENTENCIA_RETURN_FUNCIONES
+            | SENTENCIA_RETURN_METODOS
+            | LLAMADA_METODO
+
+
+LISTA_INSTRUCCIONES := INSTRUCCION LISTA_INSTRUCCIONESP
+
+LISTA_INSTRUCCIONESP := INSTRUCCION LISTA_INSTRUCCIONESP
+                      | EPSILON
+
+DECLARACION_VARIABLE := TIPO id DECLARACION_VARIABLEP
+
+DECLARACION_VARIABLEP := LISTA_ID ASIGNACION ;
+
+LISTA_ID := ',' id LISTA_ID
+          | EPSILON
+
+LISTAINSTR_LLAVES := '{' LISTA_INSTRUCCIONES '}'
+
+-------------------------  LLAMADA METODO ------------------------------
+
+LLAMADA_METODO := id '(' LISTA_PARAMETROS ')' ';'
+
+-------------------------  ASIGNACIÓN ------------------------------
+
+ASIGNACION := '=' E 
+            | EPSILON
+
+ASIGNACION_SIMPLE := id ASIGNACION_SIMPLEP
+
+ASIGNACION_SIMPLE := '=' E ';'
+
+LLAMADA_METODO := 
+
+------------------------- SENTENCIA RETURN ------------------------------
+
+SENTENCIA_RETURN_FUNCIONES := 'return' E ';'
+SENTENCIA_RETURN_METODOS := 'return' ';'
+
+------------------------- SENTENCIA CONTINUE ------------------------------
+
+SENTENCIA_CONTINUE := 'continue' ';'
+
+--------------------------- SENTENCIA BREAK -------------------------------
+
+SENTENCIA_BREAK := 'break' ';'
+
+-------------------------- SENTENCIA WHILE -------------------------------
+
+SENTENCIA_WHILE := 'while' '(' CONDICION ')' LISTAINSTR_LLAVES
+
+-------------------------- SENTENCIA IF -------------------------------
+
+SENTENCIA_IF := 'if' '(' CONDICION ')' LISTAINSTR_LLAVES OPCION_ELSE
+
+OPCION_ELSE := 'else' LISTA_IF 
+             | EPSILON 
+
+LISTA_IF := LISTAINSTR_LLAVES 
+          | SENTENCIA_IF
+
+--------------------------- SENTENCIA FOR ------------------------------
+
+SENTENCIA_FOR := 'for' '(' DECLARACION_FOR ';' CONDICION ';' id DECREMENT_INCREMENT ')' LISTAINSTR_LLAVES
+
+DECREMENT_INCREMENT := '++'
+                     | '--'
+
+DECLARACION_FOR := TIPO id '=' E 
+                 | id '=' E
+
+--------------------------- SENTENCIA PRINT ------------------------------
+
+SENTENCIA_PRINT := 'System' '.' 'println' '(' E ')' ';'
+
+---------------------------- CONDICIÓN -----------------------------------
+
+CONDICION := CONDICION_LOGICA
+           | CONDICION_OR
+           | CONDICION_AND
+           | CONDICION_NOT
+           | CONDICION_XOR
+
+CONDICION_AND := CONDICION_LOGICA && CONDICION_LOGICA
+
+CONDICION_OR := CONDICION_LOCIGA || CONDICION_LOGICA
+
+CONDICION_LOGICA  := E '>=' E
+                   | E '<=' E 
+                   | E '>' E
+                   | E '<' E 
+                   | E '==' E 
+                   | E '=' E 
+                   | E '!=' E 
+                   | E '^' E
+
+------------------------- EXPRESIÓN ------------------------------
+
+E := T EP
+
+EP := + T EP
+    | - T EP
+    | EPSILON
+
+T := F TP
+
+TP := * F TP
+    | / F TP
+    | EPSILON
+
+F := numero
+   | decimal
+   | true
+   | false
+   | id
+   | '(' E ')'
+   | string

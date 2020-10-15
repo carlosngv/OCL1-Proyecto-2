@@ -1,13 +1,3 @@
-package edd.hashtable;
-
---;
--;
-
-import edd.linkedlist.LinkedListHash;
-import edd.proyectodos.Clases.Client;
-
-++;
-+;
 /**
  *
  * @author Carlos NG

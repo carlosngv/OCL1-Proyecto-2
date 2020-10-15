@@ -16,6 +16,7 @@ class Scanner {
       "public",
       "class",
       "interface",
+      "static",
       "void",
       "int",
       "boolean",
@@ -50,6 +51,15 @@ class Scanner {
       "io",
       "new",
       "null",
+      "default",
+      "try",
+      "catch",
+      "goo",
+      "native",
+      "extends",
+      "finally",
+      "super",
+      "this",
     ];
     this.tokenList = [];
     this.errorList = [];
@@ -62,7 +72,6 @@ class Scanner {
 
     for (var i = 0; i < input.length - 1; i++) {
       input[i] = input[i].trim(); // removes \t
-
       let words = input[i].split("");
       if (oneComment == true) {
         this.setToken("COMMENT", this.aux);
@@ -78,13 +87,20 @@ class Scanner {
             } else if (char == ":") {
               this.setToken("COLON", char);
             } else if (char == "(") {
-              this.setToken("LEFT_PARENT", char);
+              this.aux += char;
+              this.state = 17;
             } else if (char == ")") {
               this.setToken("RIGHT_PARENT", char);
             } else if (char == "{") {
               this.setToken("LEFT_BRACE", char);
             } else if (char == "}") {
               this.setToken("RIGHT_BRACE", char);
+            } else if (char == "[") {
+              this.setToken("LEFT_BRACKET", char);
+            } else if (char == "]") {
+              this.setToken("RIGHT_BRACKET", char);
+            } else if (char == "*") {
+              this.setToken("MULT_SIGN", char);
             } else if (char == "+") {
               this.state = 1;
               this.aux += char;
@@ -95,16 +111,35 @@ class Scanner {
               this.aux += char;
               this.state = 3;
             } else if (char == "<") {
+              this.state = 8;
               this.aux += char;
             } else if (char == ">") {
+              this.state = 9;
               this.aux += char;
             } else if (char == "=") {
+              this.state = 11;
               this.aux += char;
             } else if (char == "!") {
+              this.state = 13;
               this.aux += char;
+            } else if (char == '"') {
+              this.aux += char;
+              this.state = 12;
             } else if (char.match(/[a-zA-Z]/i)) {
               this.aux += char;
               this.state = 5;
+            } else if (char.match(/[0-9]/)) {
+              this.aux += char;
+              this.state = 10;
+            } else if (char == "|") {
+              this.aux += char;
+              this.state = 14;
+            } else if (char == "&") {
+              this.aux += char;
+              this.state = 15;
+            } else if (char == "^") {
+              this.aux += char;
+              this.state = 16;
             } else {
               this.setError(char, "ERROR");
             }
@@ -180,16 +215,39 @@ class Scanner {
               this.setToken(this.setReserved(this.aux), this.aux);
               if (char == ";") {
                 this.setToken("SEMICOLON", char);
+              } else if (char == ".") {
+                this.setToken("DOT", char);
               } else if (char == ":") {
                 this.setToken("COLON", char);
+              } else if (char == "]") {
+                this.setToken("RIGH_BRACKET", char);
+              } else if (char == "[") {
+                this.setToken("LEFT_BRACKET", char);
+              } else if (char == "*") {
+                this.setToken("MULT_SIGN", char);
               } else if (char == ")") {
                 this.setToken("RIGHT_PARENT", char);
               } else if (char == "(") {
-                this.setToken("LEFT_PARENT", char);
+                this.aux += char;
+                this.state = 17;
               } else if (char == "}") {
                 this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
                 this.setToken("RIGHT_BRACE", char);
+              } else if (char == ",") {
+                this.setToken("COMMA", char);
+              } else if (char == "=") {
+                this.aux += char;
+                this.state = 9;
+              } else if (char == "^") {
+                this.aux += char;
+                this.state = 16;
+              } else if (char == "|") {
+                this.aux += char;
+                this.state = 14;
+              } else if (char == "&") {
+                this.aux += char;
+                this.state = 15;
               } else if (char == "+") {
                 this.aux += char;
                 this.state = 1;
@@ -199,6 +257,17 @@ class Scanner {
               } else if (char == "/") {
                 this.aux += char;
                 this.state = 3;
+              } else if (char == ">") {
+                this.aux += char;
+                this.state = 9;
+              } else if (char == "<") {
+                this.aux += char;
+                this.state = 8;
+              } else if (char == "|") {
+                this.aux += char;
+                this.state = 14;
+              } else {
+                this.setError(char, "ERROR");
               }
             }
             break;
@@ -220,6 +289,267 @@ class Scanner {
               this.aux += char;
             }
             break;
+
+          case 8:
+            if (char == "=") {
+              this.aux += char;
+              this.setToken("LESS_EQL", this.aux);
+              if (char == ";") {
+                this.setToken("SEMICOLON", char);
+              } else if (char == ":") {
+                this.setToken("COLON", char);
+              } else if (char == ")") {
+                this.setToken("RIGHT_PARENT", char);
+              } else if (char == "(") {
+                this.state = 17;
+                this.aux += char;
+              } else if (char == "}") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "{") {
+                this.setToken("RIGHT_BRACE", char);
+              } else if (char == ",") {
+                this.setToken("COMMA", char);
+              } else if (char == "+") {
+                this.aux += char;
+                this.state = 1;
+              } else if (char == "-") {
+                this.aux += char;
+                this.state = 2;
+              } else if (char == '"') {
+                this.aux += char;
+                this.state = 12;
+              } else if (char == "/") {
+                this.aux += char;
+                this.state = 3;
+              } else if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              }
+            } else {
+              this.setToken("LESS_THAN", this.aux);
+              if (char == ";") {
+                this.setToken("SEMICOLON", char);
+              } else if (char == ":") {
+                this.setToken("COLON", char);
+              } else if (char == ")") {
+                this.setToken("RIGHT_PARENT", char);
+              } else if (char == "(") {
+                this.state = 17;
+                this.aux += char;
+              } else if (char == "}") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "{") {
+                this.setToken("RIGHT_BRACE", char);
+              } else if (char == ",") {
+                this.setToken("COMMA", char);
+              } else if (char == "+") {
+                this.aux += char;
+                this.state = 1;
+              } else if (char == "-") {
+                this.aux += char;
+                this.state = 2;
+              } else if (char == '"') {
+                this.aux += char;
+                this.state = 12;
+              } else if (char == "/") {
+                this.aux += char;
+                this.state = 3;
+              } else if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              }
+            }
+            break;
+          case 9:
+            if (char == "=") {
+              this.aux += char;
+              this.setToken("GREATER_EQL", this.aux);
+            } else {
+              this.setToken("GREATER_THAN", this.aux);
+              if (char == ";") {
+                this.setToken("SEMICOLON", char);
+              } else if (char == ":") {
+                this.setToken("COLON", char);
+              } else if (char == "]") {
+                this.setToken("RIGH_BRACKET", char);
+              } else if (char == "[") {
+                this.setToken("LEFT_BRACKET", char);
+              } else if (char == ")") {
+                this.setToken("RIGHT_PARENT", char);
+              } else if (char == "(") {
+                this.state = 17;
+                this.aux += char;
+              } else if (char == "}") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "{") {
+                this.setToken("RIGHT_BRACE", char);
+              } else if (char == ",") {
+                this.setToken("COMMA", char);
+              } else if (char == "+") {
+                this.aux += char;
+                this.state = 1;
+              } else if (char == "-") {
+                this.aux += char;
+                this.state = 2;
+              } else if (char == "/") {
+                this.aux += char;
+                this.state = 3;
+              } else if (char == '"') {
+                this.aux += char;
+                this.state = 12;
+              } else if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              }
+            }
+            break;
+          case 10:
+            if (char.match(/[0-9]/)) {
+              this.aux += char;
+            } else if (char == ".") {
+              this.aux += char;
+              this.state = 10;
+            } else {
+              this.setToken("NUMBER", this.aux);
+              if (char == ";") {
+                this.setToken("SEMICOLON", char);
+              } else if (char == ":") {
+                this.setToken("COLON", char);
+              } else if (char == "]") {
+                this.setToken("RIGH_BRACKET", char);
+              } else if (char == "*") {
+                this.setToken("MULT_SIGN", char);
+              } else if (char == "[") {
+                this.setToken("LEFT_BRACKET", char);
+              } else if (char == ")") {
+                this.setToken("RIGHT_PARENT", char);
+              } else if (char == "(") {
+                this.state = 17;
+                this.aux += char;
+              } else if (char == "}") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "{") {
+                this.setToken("RIGHT_BRACE", char);
+              } else if (char == ",") {
+                this.setToken("COMMA", char);
+              } else if (char == "|") {
+                this.aux += char;
+                this.state = 14;
+              } else if (char == "&") {
+                this.aux += char;
+                this.state = 15;
+              } else if (char == "^") {
+                this.aux += char;
+                this.state = 16;
+              } else if (char == "=") {
+                this.aux += char;
+                this.state = 9;
+              } else if (char == "+") {
+                this.aux += char;
+                this.state = 1;
+              } else if (char == "-") {
+                this.aux += char;
+                this.state = 2;
+              } else if (char == "/") {
+                this.aux += char;
+                this.state = 3;
+              }
+            }
+            break;
+          case 11:
+            if (char == "=") {
+              this.aux += char;
+              this.setToken("EQUALS_SIGN", this.aux);
+            } else {
+              this.setToken("EQUALS_SIGN", this.aux);
+              if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              } else if (char == '"') {
+                this.state = 12;
+                this.aux += char;
+              }
+            }
+            break;
+          case 12:
+            if (char != '"') {
+              this.state = 12;
+              this.aux += char;
+            } else if (char == '"') {
+              this.aux += char;
+              this.setToken("STRING", this.aux);
+            }
+            break;
+          case 13:
+            if (char == "=") {
+              this.aux += char;
+              this.setToken("INEQUALITY", this.aux);
+            } else {
+              this.setToken("NOT_OPT", this.aux);
+              if (char.match(/[a-zA-Z]/i)) {
+                this.aux += char;
+                this.state = 5;
+              }
+            }
+          case 14:
+            if (char == "|") {
+              this.aux += char;
+              this.setToken("OR_OPT", this.aux);
+            } else {
+              if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              } else if (char.match(/[a-zA-Z]/i)) {
+                this.state = 5;
+                this.aux += char;
+              }
+            }
+            break;
+          case 15:
+            if (char == "&") {
+              this.aux += char;
+              this.setToken("AND_OPT", this.aux);
+            } else {
+              this.setToken("AND_OPT", this.aux);
+              if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
+              } else if (char.match(/[a-zA-Z]/i)) {
+                this.state = 5;
+                this.aux += char;
+              }
+            }
+            break;
+          case 16:
+            this.setToken("XOR_OPT", this.aux);
+            this.aux += char;
+            if (char.match(/[0-9]/)) {
+              this.state = 10;
+              this.aux += char;
+            } else if (char.match(/[a-zA-Z]/i)) {
+              this.state = 5;
+              this.aux += char;
+            }
+            break;
+          case 17:
+            this.setToken("LEFT_PARENT", this.aux);
+            if (char == '"') {
+              this.state = 12;
+              this.aux += char;
+            } else if (char.match(/[0-9]/)) {
+              this.state = 10;
+              this.aux += char;
+            }  else if (char.match(/[a-zA-Z]/i)) {
+              this.state = 5;
+              this.aux += char;
+            } else if (char == ')') {
+              this.setToken("RIGHT_PARENT", char);
+            } else if (char == '(') {
+              this.setToken("LEFT_PARENT", char);
+            }
+            break;
+          default:
+            console.log("error");
         }
       });
 

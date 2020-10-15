@@ -78,3 +78,9 @@ textarea {
 .open-file input {
     width: 0;
 }
+
+.btn-analyze {
+    width: 100%;
+    margin-bottom: 40px;
+}
+
