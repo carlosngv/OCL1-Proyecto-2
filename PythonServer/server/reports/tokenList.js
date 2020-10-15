@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 function generateHTML(tokenList) {
     var cont = 1;
     let html = `
@@ -46,7 +48,12 @@ function generateHTML(tokenList) {
               </html>
               `;
   
-    return html;
+    fs.writeFile("./TokensList.html", html, (error) => {
+      if(error) {
+        console.log(error);
+      }
+    });
+
   }
   
   module.exports = generateHTML;

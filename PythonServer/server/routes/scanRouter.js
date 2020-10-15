@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const generateHTML = require('../reports/tokenList');
 const Scanner = require("../scanner/scanner");
 const scanRouter = Router();
 var newScanner = new Scanner();
@@ -7,9 +8,7 @@ scanRouter.post("/", (req, res) => {
   console.log(input);
   newScanner.scan(input.toString());
   console.log(newScanner.tokenList);
-  newScanner.tokenList.forEach((token) => {
-    console.log(token);
-  });
+  generateHTML(newScanner.tokenList);
   res.json({
     message: input,
   });
