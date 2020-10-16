@@ -14,6 +14,7 @@ class Scanner {
   scan(input) {
     this.reservedList = [
       "public",
+      "args",
       "class",
       "interface",
       "static",
@@ -556,6 +557,9 @@ class Scanner {
       this.row += 1;
       this.column = 0;
     }
+    // Pushing LAST token.
+    let newToken = new Token('LAST', 'LAST', 0, 0);
+    this.tokenList.push(newToken);
   }
 
   setToken(type, value) {

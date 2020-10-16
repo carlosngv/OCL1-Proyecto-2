@@ -48,7 +48,7 @@ function generateHTML(tokenList) {
               </html>
               `;
   
-    fs.writeFile("./TokensList.html", html, (error) => {
+    fs.writeFile("./public/TokensList.html", html, (error) => {
       if(error) {
         console.log(error);
       }
