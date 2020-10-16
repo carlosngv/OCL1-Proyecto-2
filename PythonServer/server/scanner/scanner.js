@@ -547,6 +547,8 @@ class Scanner {
               this.setToken("RIGHT_PARENT", char);
             } else if (char == '(') {
               this.setToken("LEFT_PARENT", char);
+            } else if (char == '!') {
+              this.setToken("NOT_OPT", char);
             }
             break;
           default:

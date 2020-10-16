@@ -88,12 +88,12 @@ LLAMADA_METODO := id '(' LISTA_PARAMETROS ')' ';'
 
 -------------------------  ASIGNACIÓN ------------------------------ LISTO
 
-ASIGNACION := '=' E 
+ASIGNACION := '=' E ';'
             | EPSILON
 
 ASIGNACION_SIMPLE := id ASIGNACION_SIMPLEP
 
-ASIGNACION_SIMPLE := '=' E ';'
+ASIGNACION_SIMPLEP := '=' E ';'
 
 LLAMADA_METODO := 
 
@@ -118,11 +118,11 @@ SENTENCIA_BREAK := 'break' ';'
 
 -------------------------- SENTENCIA WHILE -------------------------------  LISTO
 
-SENTENCIA_WHILE := 'while' '(' CONDICION ')' LISTAINSTR_LLAVES
+SENTENCIA_WHILE := 'while' '(' EXPRESION ')' LISTAINSTR_LLAVES
 
 -------------------------- SENTENCIA IF ------------------------------- LISTO
 
-SENTENCIA_IF := 'if' '(' CONDICION ')' LISTAINSTR_LLAVES OPCION_ELSE
+SENTENCIA_IF := 'if' '(' EXPRESION ')' LISTAINSTR_LLAVES OPCION_ELSE
 
 OPCION_ELSE := 'else' LISTA_IF 
              | EPSILON 
@@ -132,7 +132,7 @@ LISTA_IF := LISTAINSTR_LLAVES
 
 --------------------------- SENTENCIA FOR ------------------------------ LISTO
 
-SENTENCIA_FOR := 'for' '(' DECLARACION_FOR ';' CONDICION ';' id DECREMENT_INCREMENT ')' LISTAINSTR_LLAVES
+SENTENCIA_FOR := 'for' '(' DECLARACION_FOR ';' EXPRESION ';' id DECREMENT_INCREMENT ')' LISTAINSTR_LLAVES
 
 DECREMENT_INCREMENT := '++'
                      | '--'
@@ -146,22 +146,22 @@ SENTENCIA_PRINT := 'System' '.' 'out' '.' 'println' '(' E ')' ';'
 
 ---------------------------- CONDICIÓN ----------------------------------- PENDIENTE
 
-CONDICION := CONDICION_LOGICA
-           | CONDICION_OR
-           | CONDICION_AND
+EXPRESION := OPERADOR_NOT E CONDICION CONDICION_LOGICA
 
-CONDICION_AND := CONDICION_LOGICA && CONDICION_LOGICA
+OPERADOR_NOT := '!'
+               | EPSILON
 
-CONDICION_OR := CONDICION_LOCIGA || CONDICION_LOGICA
+CONDICION_LOGICA := '&&' EXPRESION
+                   | '||' EXPRESION
+                   | '^' EXPRESION
+                   | EPSILON
 
-CONDICION_LOGICA  := E '>=' E
-                   | E '<=' E 
-                   | E '>' E
-                   | E '<' E 
-                   | E '==' E 
-                   | E '=' E 
-                   | E '!=' E 
-                   | E '^' E
+
+CONDICION := '<=' E
+           | '>=' EP
+           | '>' E 
+           | '<' E
+           | '!=' E 
 
 ------------------------- EXPRESIÓN ------------------------------ LISTO
 
