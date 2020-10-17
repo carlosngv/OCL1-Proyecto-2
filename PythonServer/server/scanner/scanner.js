@@ -13,6 +13,7 @@ class Scanner {
   }
   scan(input) {
     this.reservedList = [
+      "main",
       "public",
       "args",
       "class",
@@ -62,6 +63,7 @@ class Scanner {
       "finally",
       "super",
       "this",
+      "args"
     ];
     this.tokenList = [];
     this.errorList = [];

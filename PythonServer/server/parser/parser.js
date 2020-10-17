@@ -10,6 +10,9 @@ class Parser {
     this.defFound = false;
     this.contTab = 0;
     this.elifFound = false;
+    this.mainFound = false;
+    this.auxMain = "";
+    this.llamadaMetodo = false;
   }
 
   parse() {
@@ -93,7 +96,15 @@ class Parser {
       this.stringTraduccion += "def ";
       this.defFound = true;
       this.match("RESERVED_VOID");
-    } else {
+    } else if (this.preAnalysis.type == "RESERVED_STATIC") {
+      this.match("RESERVED_STATIC");
+      this.mainFound = true;
+      this.SentenciaMain();
+      return;
+    } else if (
+      this.preAnalysis.type != "RESERVED_VOID" &&
+      this.preAnalysis.type != "RESERVED_STATIC"
+    ) {
       this.stringTraduccion += "def ";
       this.Tipo();
     }
@@ -116,11 +127,14 @@ class Parser {
   }
 
   DeclaracionParametros() {
-    if (this.preAnalysis.type == "RIGHT_PARENT") {
+    if (
+      this.preAnalysis.type == "RIGHT_PARENT" &&
+      this.llamadaMetodo == false
+    ) {
       this.stringTraduccion += this.preAnalysis.value + ":\n";
       this.match("RIGHT_PARENT");
       this.ListaInstrLlaves();
-    } else {
+    } else if (this.llamadaMetodo == false && this.preAnalysis.type != "RIGHT_PARENT") {
       this.Tipo();
       this.stringTraduccion += this.preAnalysis.value;
       this.match("ID");
@@ -128,6 +142,18 @@ class Parser {
       this.stringTraduccion += this.preAnalysis.value + ":\n";
       this.match("RIGHT_PARENT");
       this.ListaInstrLlaves();
+    } else if (this.llamadaMetodo == true && this.preAnalysis.type == "RIGHT_PARENT") {
+      this.stringTraduccion += this.preAnalysis.value + ":\n";
+      this.match("RIGHT_PARENT");
+      this.llamadaMetodo = false;
+    } else if ( this.llamadaMetodo == true && this.preAnalysis.type != "RIGHT_PARENT") {
+      this.Tipo();
+      this.stringTraduccion += this.preAnalysis.value;
+      this.match("ID");
+      this.ListaParametros();
+      this.stringTraduccion += this.preAnalysis.value;
+      this.match("RIGHT_PARENT");
+      this.llamadaMetodo = false;
     }
   }
 
@@ -306,11 +332,12 @@ class Parser {
   SentenciaReturnMetodos() {
     this.stringTraduccion += this.preAnalysis.value;
     this.match("RESERVED_RETURN");
+    this.E(); // Podría omitirse
     this.match("SEMICOLON");
   }
 
   SentenciaReturnFunciones() {
-    this.stringTraduccion += this.preAnalysis.value;
+    this.stringTraduccion += this.preAnalysis.value + " ";
     this.match("RESERVED_RETURN");
     this.E();
     this.match("SEMICOLON");
@@ -323,6 +350,7 @@ class Parser {
   }
 
   AsignacionSimpleP() {
+    this.stringTraduccion += this.preAnalysis.value + " ";
     this.match("EQUALS_SIGN");
     this.E();
     this.match("SEMICOLON");
@@ -361,15 +389,16 @@ class Parser {
   }
 
   LlamadaMetodo() {
+    this.llamadaMetodo = true;
+    this.stringTraduccion += this.preAnalysis.value;
+    this.match("ID");
+    this.stringTraduccion += this.preAnalysis.value;
     this.match("LEFT_PARENT");
-    this.ListaParametros();
-    this.match("RIGHT_PARENT");
+    this.DeclaracionParametros();
     this.match("SEMICOLON");
   }
 
   SentenciaMain() {
-    this.match("RESERVED_PUBLIC");
-    this.match("RESERVED_STATIC");
     this.match("RESERVED_VOID");
     this.match("RESERVED_MAIN");
     this.match("LEFT_PARENT");
@@ -378,19 +407,21 @@ class Parser {
     this.match("RIGHT_BRACKET");
     this.match("RESERVED_ARGS");
     this.match("RIGHT_PARENT");
-    this.stringTraduccion = 'def main()\n'
-    this.stringTraduccion = 'if __name__ = “__main__”:\n main() '
+    this.stringTraduccion += "def main():\n";
+    this.auxMain = "\tif __name__ = “__main__”:\n \t\tmain()\n";
     this.ListaInstrLlaves();
+    this.stringTraduccion += this.auxMain;
+    this.auxMain = "";
   }
 
   SentenciaContinue() {
-    this.stringTraduccion += 'continue'
+    this.stringTraduccion += "continue";
     this.match("RESERVED_CONTINUE");
     this.match("SEMICOLON");
   }
 
   SentenciaBreak() {
-    this.stringTraduccion += 'break'
+    this.stringTraduccion += "break";
     this.match("RESERVED_BREAK");
     this.match("SEMICOLON");
   }
@@ -412,7 +443,7 @@ class Parser {
   }
 
   SentenciaWhile() {
-    this.stringTraduccion += this.preAnalysis.value + ' ';
+    this.stringTraduccion += this.preAnalysis.value + " ";
     this.match("RESERVED_WHILE");
     this.match("LEFT_PARENT");
     this.Expresion();
@@ -422,10 +453,9 @@ class Parser {
   }
 
   SentenciaIf() {
-    if (this.elifFound != true){
+    if (this.elifFound != true) {
       this.stringTraduccion += this.preAnalysis.value + " ";
     } else {
-      
     }
     this.match("RESERVED_IF");
     this.match("LEFT_PARENT");
@@ -435,7 +465,6 @@ class Parser {
     this.ListaInstrLlaves();
     this.OpcionElse();
   }
-
 
   OpcionElse() {
     if (this.preAnalysis.type == "RESERVED_ELSE") {
@@ -459,24 +488,24 @@ class Parser {
   }
 
   SentenciaDoWhile() {
-    this.match('RESERVED_DO');
+    this.match("RESERVED_DO");
     this.ListaInstrLlaves();
-    this.match('RESERVED_WHILE');
-    this.match('LEFT_PARENT');
-    this.stringTraduccion += 'while ';
+    this.match("RESERVED_WHILE");
+    this.match("LEFT_PARENT");
+    this.stringTraduccion += "while ";
     this.Expresion();
     this.match("RIGHT_PARENT");
   }
 
   SentenciaFor() {
-    this.stringTraduccion += 'for ';
+    this.stringTraduccion += "for ";
     this.match("RESERVED_FOR");
     this.match("LEFT_PARENT");
     this.DeclaracionFor();
-    this.stringTraduccion += 'in range ('
+    this.stringTraduccion += "in range (";
     this.match("SEMICOLON");
     this.Expresion();
-    this.stringTraduccion += '):\n'
+    this.stringTraduccion += "):\n";
     this.match("SEMICOLON");
     this.match("ID");
     this.IncrementoDecremento();
@@ -486,7 +515,7 @@ class Parser {
 
   DeclaracionFor() {
     if (this.preAnalysis.type == "ID") {
-      this.stringTraduccion = this.preAnalysis.value + ' ';
+      this.stringTraduccion = this.preAnalysis.value + " ";
       this.match("ID");
       this.match("EQUALS_SIGN");
       this.E();
@@ -569,11 +598,13 @@ class Parser {
 
   EP() {
     if (this.preAnalysis.type == "PLUS_SIGN") {
+      this.stringTraduccion += "+ ";
       this.match("PLUS_SIGN");
       this.T();
       this.EP();
     }
     if (this.preAnalysis.type == "SUBS_SIGN") {
+      this.stringTraduccion += "- ";
       this.match("SUBS_SIGN");
       this.T();
       this.EP();
@@ -587,11 +618,13 @@ class Parser {
 
   TP() {
     if (this.preAnalysis.type == "MULT_SIGN") {
+      this.stringTraduccion += "* ";
       this.match("MULT_SIGN");
       this.F();
       this.TP();
     }
     if (this.preAnalysis.type == "DIV_SIGN") {
+      this.stringTraduccion += "/";
       this.match("DIV_SIGN");
       this.F();
       this.TP();
