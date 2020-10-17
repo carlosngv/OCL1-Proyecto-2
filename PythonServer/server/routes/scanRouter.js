@@ -10,6 +10,7 @@ scanRouter.post("/", (req, res) => {
   generateHTML(newScanner.tokenList);
   var newParser = new Parser(newScanner.tokenList);
   newParser.parse()
+  console.log(newParser.stringTraduccion);
   res.json({
     message: input,
   });

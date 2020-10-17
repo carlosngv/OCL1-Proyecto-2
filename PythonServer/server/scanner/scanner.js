@@ -27,6 +27,7 @@ class Scanner {
       "for",
       "while",
       "do",
+      "String",
       "System",
       "println",
       "out",
