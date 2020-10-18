@@ -12,7 +12,7 @@ scanRouter.post("/", (req, res) => {
   newParser.parse()
   console.log(newParser.stringTraduccion);
   res.json({
-    message: input,
+    pythonParsed: newParser.stringTraduccion,
   });
 });
 

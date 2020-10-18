@@ -13,6 +13,9 @@ class Parser {
     this.mainFound = false;
     this.auxMain = "";
     this.llamadaMetodo = false;
+    this.forFound = false;
+    this.forValue1 = "";
+    this.forValue2 = "";
   }
 
   parse() {
@@ -105,8 +108,10 @@ class Parser {
       this.preAnalysis.type != "RESERVED_VOID" &&
       this.preAnalysis.type != "RESERVED_STATIC"
     ) {
+      this.defFound = true;
       this.stringTraduccion += "def ";
       this.Tipo();
+      this.defFound = false;
     }
     this.stringTraduccion += this.preAnalysis.value;
     this.match("ID");
@@ -134,7 +139,10 @@ class Parser {
       this.stringTraduccion += this.preAnalysis.value + ":\n";
       this.match("RIGHT_PARENT");
       this.ListaInstrLlaves();
-    } else if (this.llamadaMetodo == false && this.preAnalysis.type != "RIGHT_PARENT") {
+    } else if (
+      this.llamadaMetodo == false &&
+      this.preAnalysis.type != "RIGHT_PARENT"
+    ) {
       this.Tipo();
       this.stringTraduccion += this.preAnalysis.value;
       this.match("ID");
@@ -142,16 +150,22 @@ class Parser {
       this.stringTraduccion += this.preAnalysis.value + ":\n";
       this.match("RIGHT_PARENT");
       this.ListaInstrLlaves();
-    } else if (this.llamadaMetodo == true && this.preAnalysis.type == "RIGHT_PARENT") {
-      this.stringTraduccion += this.preAnalysis.value + ":\n";
+    } else if (
+      this.llamadaMetodo == true &&
+      this.preAnalysis.type == "RIGHT_PARENT"
+    ) {
+      this.stringTraduccion += this.preAnalysis.value + "\n";
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
-    } else if ( this.llamadaMetodo == true && this.preAnalysis.type != "RIGHT_PARENT") {
+    } else if (
+      this.llamadaMetodo == true &&
+      this.preAnalysis.type != "RIGHT_PARENT"
+    ) {
       this.Tipo();
       this.stringTraduccion += this.preAnalysis.value;
       this.match("ID");
       this.ListaParametros();
-      this.stringTraduccion += this.preAnalysis.value;
+      this.stringTraduccion += this.preAnalysis.value + "\n";
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
     }
@@ -170,19 +184,29 @@ class Parser {
 
   Tipo() {
     if (this.preAnalysis.type == "RESERVED_INT") {
-      this.stringTraduccion += "var ";
+      if (this.forFound != true && this.defFound != true) {
+        this.stringTraduccion += "var ";
+      }
       this.match("RESERVED_INT");
     } else if (this.preAnalysis.type == "RESERVED_BOOLEAN") {
-      this.stringTraduccion += "var ";
+      if (this.forFound != true || this.defFound != true) {
+        this.stringTraduccion += "var ";
+      }
       this.match("RESERVED_BOOLEAN");
     } else if (this.preAnalysis.type == "RESERVED_DOUBLE") {
-      this.stringTraduccion += "var ";
+      if (this.forFound != true || this.defFound != true) {
+        this.stringTraduccion += "var ";
+      }
       this.match("RESERVED_DOUBLE");
     } else if (this.preAnalysis.type == "RESERVED_STRING") {
-      this.stringTraduccion += "var ";
+      if (this.forFound != true || this.defFound != true) {
+        this.stringTraduccion += "var ";
+      }
       this.match("RESERVED_STRING");
     } else if (this.preAnalysis.type == "RESERVED_CHAR") {
-      this.stringTraduccion += "var ";
+      if (this.forFound != true || this.defFound != true) {
+        this.stringTraduccion += "var ";
+      }
       this.match("RESERVED_CHAR");
     }
   }
@@ -498,29 +522,35 @@ class Parser {
   }
 
   SentenciaFor() {
+    this.forFound = true;
     this.stringTraduccion += "for ";
     this.match("RESERVED_FOR");
     this.match("LEFT_PARENT");
     this.DeclaracionFor();
-    this.stringTraduccion += "in range (";
+    this.stringTraduccion += "in range(" + this.forValue1 + ",";
     this.match("SEMICOLON");
     this.Expresion();
-    this.stringTraduccion += "):\n";
+    this.stringTraduccion += this.forValue2 + "):\n";
     this.match("SEMICOLON");
     this.match("ID");
     this.IncrementoDecremento();
     this.match("RIGHT_PARENT");
+    this.forValue1 = "";
+    this.forValue2 = "";
+    this.forFound = false;
     this.ListaInstrLlaves();
+    
   }
 
   DeclaracionFor() {
     if (this.preAnalysis.type == "ID") {
-      this.stringTraduccion = this.preAnalysis.value + " ";
+      this.stringTraduccion += this.preAnalysis.value + " ";
       this.match("ID");
       this.match("EQUALS_SIGN");
       this.E();
     } else {
       this.Tipo();
+      this.stringTraduccion += this.preAnalysis.value + " ";
       this.match("ID");
       this.match("EQUALS_SIGN");
       this.E();
@@ -569,23 +599,33 @@ class Parser {
 
   CondicionLogica() {
     if (this.preAnalysis.type == "GREATER_EQL") {
-      this.stringTraduccion += ">= ";
+      if (this.forFound != true) {
+        this.stringTraduccion += "< ";
+      }
       this.match("GREATER_EQL");
       this.E();
     } else if (this.preAnalysis.type == "LESS_EQL") {
-      this.stringTraduccion += "<= ";
+      if (this.forFound != true) {
+        this.stringTraduccion += "< ";
+      }
       this.match("LESS_EQL");
       this.E();
     } else if (this.preAnalysis.type == "LESS_THAN") {
-      this.stringTraduccion += "< ";
+      if (this.forFound != true) {
+        this.stringTraduccion += "< ";
+      }
       this.match("LESS_THAN");
       this.E();
     } else if (this.preAnalysis.type == "GREATER_THAN") {
-      this.stringTraduccion += "> ";
+      if (this.forFound != true) {
+        this.stringTraduccion += "< ";
+      }
       this.match("GREATER_THAN");
       this.E();
     } else if (this.preAnalysis.type == "INEQUALITY") {
-      this.stringTraduccion += "!= ";
+      if (this.forFound != true) {
+        this.stringTraduccion += "< ";
+      }
       this.match("INEQUALITY");
       this.E();
     }
@@ -633,10 +673,30 @@ class Parser {
 
   F() {
     if (this.preAnalysis.type == "NUMBER") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.forFound != true) {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      } else if (this.forFound == true && this.forValue1 == "") {
+        this.forValue1 = this.preAnalysis.value;
+      } else if (
+        this.forFound == true &&
+        this.forValue2 == "" &&
+        this.forValue1 != ""
+      ) {
+        this.forValue2 = this.preAnalysis.value;
+      }
       this.match("NUMBER");
     } else if (this.preAnalysis.type == "ID") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.forFound != true) {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      } else if (this.forFound == true && this.forValue1 == "") {
+        this.forValue1 = this.preAnalysis.value;
+      } else if (
+        this.forFound == true &&
+        this.forValue2 == "" &&
+        this.forValue1 == ""
+      ) {
+        this.forValue2 = this.preAnalysis.value;
+      }
       this.match("ID");
     } else if (this.preAnalysis.type == "DECIMAL") {
       this.match("DECIMAL");
