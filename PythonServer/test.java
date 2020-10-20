@@ -1,3 +1,9 @@
+public interface interfaz1 { 
+
+  public void hola(int a);
+
+}
+
 public class Prueba {
   public static void main(String[] args) {
   	hola(a);

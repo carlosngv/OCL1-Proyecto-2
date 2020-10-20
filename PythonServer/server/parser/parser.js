@@ -23,16 +23,22 @@ class Parser {
   }
 
   Inicio() {
-    this.match("RESERVED_PUBLIC");
-    if (this.preAnalysis.type == "RESERVED_CLASS") {
-      // 'public' SENTENCIA_CLASE LISTA_CLASES 'ultimo'
-      this.SentenciaClase();
-      this.ListaClases();
-      this.match("LAST");
-    } else if (this.preAnalysis.type == "RESERVED_INTERFACE") {
-      // 'public' SENTENCIA_INTERFAZ LISTA_INTERFACES 'ultimo'
-      this.SentenciaInterfaz();
-      this.ListaInterfaces();
+    if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      this.match("RESERVED_PUBLIC");
+      if (this.preAnalysis.type == "RESERVED_CLASS") {
+        // 'public' SENTENCIA_CLASE LISTA_CLASES 'ultimo'
+        this.SentenciaClase();
+        this.ListaClases();
+        this.Inicio();
+        //this.match("LAST");
+      } else if (this.preAnalysis.type == "RESERVED_INTERFACE") {
+        // 'public' SENTENCIA_INTERFAZ LISTA_INTERFACES 'ultimo'
+        this.SentenciaInterfaz();
+        this.ListaInterfaces();
+        this.Inicio();
+        //this.match("LAST");
+      }
+    } else {
       this.match("LAST");
     }
   }
@@ -54,8 +60,8 @@ class Parser {
 
   ListaClases() {
     // SENTENCIA_CLASE LISTA_CLASES
-    this.tabular();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      this.tabular();
       this.match("RESERVED_PUBLIC");
       this.SentenciaClase();
       this.ListaClases();
@@ -64,15 +70,21 @@ class Parser {
 
   SentenciaInterfaz() {
     // 'interface' id '{' LISTA_DECLARACION_METODOS'}'
+    this.stringTraduccion += "class ";
     this.match("RESERVED_INTERFACE");
+    this.stringTraduccion += this.preAnalysis.value;
     this.match("ID");
+    this.stringTraduccion += ":\n";
     this.match("LEFT_BRACE");
-    this.ListaDeclaracionMetodos();
+    this.contTab++; // Indenta contenido dentro de la clase
+    this.ListaDeclaracionFunciones();
     this.match("RIGHT_BRACE");
+    this.contTab--; // Indenta contenido para manterner clases aisladas
   }
 
   ListaInterfaces() {
     if (this.preAnalysis.type == "RESERVED_INTERFACE") {
+      this.tabular();
       this.SentenciaInterfaz();
       this.ListaInterfaces();
     }
@@ -85,10 +97,10 @@ class Parser {
     }
   }
 
-  ListaDeclaracionMetodos() {
+  ListaDeclaracionFunciones() {
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
-      this.DeclaracionMetodos();
-      this.ListaDeclaracionMetodos();
+      this.DeclaracionFunciones();
+      this.ListaDeclaracionFunciones();
     }
   }
 
@@ -120,15 +132,34 @@ class Parser {
     this.DeclaracionParametros();
   }
 
-  DeclaracionMetodos() {
+  DeclaracionFunciones() {
+    this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
-    this.stringTraduccion += "def ";
+    this.stringTraduccion += "self ";
     this.match("RESERVED_VOID");
     this.stringTraduccion += this.preAnalysis.value;
     this.match("ID");
     this.stringTraduccion += this.preAnalysis.value;
     this.match("LEFT_PARENT");
-    this.DeclaracionParametros();
+    this.DeclaracionParametrosInterfaz();
+  }
+
+  DeclaracionParametrosInterfaz() {
+    if (this.preAnalysis == "RIGHT PARENT") {
+      this.stringTraduccion += this.preAnalysis.value;
+      this.match("RIGHT_PARENT");
+      this.stringTraduccion = this.preAnalysis.value + "\n";
+      this.match("SEMICOLON");
+    } else {
+      this.Tipo();
+      this.stringTraduccion += this.preAnalysis.value;
+      this.match("ID");
+      this.ListaParametros();
+      this.stringTraduccion += this.preAnalysis.value;
+      this.match("RIGHT_PARENT");
+      this.stringTraduccion += this.preAnalysis.value + "\n";
+      this.match("SEMICOLON");
+    }
   }
 
   DeclaracionParametros() {
@@ -539,7 +570,6 @@ class Parser {
     this.forValue2 = "";
     this.forFound = false;
     this.ListaInstrLlaves();
-    
   }
 
   DeclaracionFor() {
