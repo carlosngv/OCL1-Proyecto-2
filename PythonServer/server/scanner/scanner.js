@@ -287,7 +287,7 @@ class Scanner {
           case 7:
             if (char == "/") {
               this.aux += char;
-              this.setToken("COMMNENT", this.aux);
+              this.setToken("MULTILINE_COMMENT", this.aux);
             } else {
               this.state = 6;
               this.aux += char;

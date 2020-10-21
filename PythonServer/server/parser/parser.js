@@ -59,6 +59,7 @@ class Parser {
   }
 
   ListaClases() {
+    this.Comentario();
     // SENTENCIA_CLASE LISTA_CLASES
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
       this.tabular();
@@ -69,6 +70,7 @@ class Parser {
   }
 
   SentenciaInterfaz() {
+    
     // 'interface' id '{' LISTA_DECLARACION_METODOS'}'
     this.stringTraduccion += "class ";
     this.match("RESERVED_INTERFACE");
@@ -83,6 +85,7 @@ class Parser {
   }
 
   ListaInterfaces() {
+    this.Comentario();
     if (this.preAnalysis.type == "RESERVED_INTERFACE") {
       this.tabular();
       this.SentenciaInterfaz();
@@ -91,6 +94,7 @@ class Parser {
   }
 
   ListaDeclaracionMetodosFunciones() {
+    this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
       this.DeclaracionMetodosFunciones();
       this.ListaDeclaracionMetodosFunciones();
@@ -98,6 +102,7 @@ class Parser {
   }
 
   ListaDeclaracionFunciones() {
+    this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
       this.DeclaracionFunciones();
       this.ListaDeclaracionFunciones();
@@ -105,6 +110,7 @@ class Parser {
   }
 
   DeclaracionMetodosFunciones() {
+    this.Comentario();
     this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
     if (this.preAnalysis.type == "RESERVED_VOID") {
@@ -133,6 +139,7 @@ class Parser {
   }
 
   DeclaracionFunciones() {
+    this.Comentario();
     this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
     this.stringTraduccion += "self ";
@@ -243,6 +250,7 @@ class Parser {
   }
 
   Instruccion() {
+    this.Comentario();
     if (this.preAnalysis.type == "RESERVED_IF") {
       this.tabular();
       this.SentenciaIf();
@@ -312,6 +320,7 @@ class Parser {
   }
 
   ListaInstruccionesP() {
+    this.Comentario();
     if (this.preAnalysis.type == "RESERVED_IF") {
       this.Instruccion();
       this.ListaInstruccionesP();
@@ -412,6 +421,7 @@ class Parser {
   }
 
   Asignacion() {
+    this.Comentario();
     if (this.preAnalysis.type == "EQUALS_SIGN") {
       this.stringTraduccion += this.preAnalysis.value + " ";
       this.match("EQUALS_SIGN");
@@ -422,6 +432,7 @@ class Parser {
   }
 
   DeclaracionVariable() {
+    this.Comentario();
     this.Tipo();
     this.stringTraduccion += this.preAnalysis.value + " ";
     this.match("ID");
@@ -479,6 +490,23 @@ class Parser {
     this.stringTraduccion += "break";
     this.match("RESERVED_BREAK");
     this.match("SEMICOLON");
+  }
+
+  Comentario() {
+    while(this.preAnalysis.type == 'MULTILINE_COMMENT' || this.preAnalysis.type  == 'COMMENT') {
+        if(this.preAnalysis.type == 'MULTILINE_COMMENT') {
+          this.preAnalysis.value = this.preAnalysis.value.replace('/*','#');
+          this.preAnalysis.value = this.preAnalysis.value.replace('*/','');
+          this.tabular();
+          this.stringTraduccion += this.preAnalysis.value + '\n';
+        } else if(this.preAnalysis.type == 'COMMENT') {
+          this.preAnalysis.value = this.preAnalysis.value.replace('//', '#');
+          this.tabular();
+          this.stringTraduccion += this.preAnalysis.value + '\n';
+        }
+        this.numPreAnalysis++;
+        this.preAnalysis = this.tokenList[this.numPreAnalysis];
+    }
   }
 
   SentenciaPrint() {
