@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const generateHTML = require('../reports/tokenList');
 const Scanner = require("../scanner/scanner");
-const Parser = require("../parser/parser");
+const Parser = require("../parser/parser2");
 const scanRouter = Router();
 var newScanner = new Scanner();
 scanRouter.post("/", (req, res) => {
@@ -11,6 +11,8 @@ scanRouter.post("/", (req, res) => {
   var newParser = new Parser(newScanner.tokenList);
   newParser.parse()
   console.log(newParser.stringTraduccion);
+  console.log('---------------------------------------------------------------------------------');
+  console.log('ERRORES', newParser.errorList);
   res.json({
     errors: newParser.errorList,
   });

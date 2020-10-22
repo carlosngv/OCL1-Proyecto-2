@@ -1,6 +1,4 @@
 var Error = require("./error");
-const graphviz = require("graphviz");
-var util = require("util");
 
 class Parser {
   constructor(tokenList) {
@@ -19,8 +17,9 @@ class Parser {
     this.forValue1 = "";
     this.forValue2 = "";
     this.errorFound = false;
-    this.graph = "";
-    this.g = graphviz.graph("G");
+    this.doWhileFound = false;
+    this.doWhileContent = "";
+    this.whileOfDo = false;
   }
 
   parse() {
@@ -28,13 +27,10 @@ class Parser {
   }
 
   Inicio() {
-    this.g.addNode("Inicio");
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
       this.match("RESERVED_PUBLIC");
       if (this.preAnalysis.type == "RESERVED_CLASS") {
         // 'public' SENTENCIA_CLASE LISTA_CLASES 'ultimo'
-        this.g.addNode('SentenciaClase');
-        this.g.addEdge("Inicio", 'SentenciaClase');
         this.SentenciaClase();
         this.ListaClases();
         this.Inicio();
@@ -48,31 +44,20 @@ class Parser {
       }
     } else {
       this.match("LAST");
-      this.g.setGraphVizPath("/usr/local/bin");
-      this.g.output("pdf", "ast.pdf");
     }
   }
 
   SentenciaClase() {
     // public class { LISTA_DECLARACION_METODOS_FUNCIONES }
     this.stringTraduccion += this.preAnalysis.value + " ";
-    this.g.addNode(this.preAnalysis.value);
-    this.g.addEdge("Raíz", this.preAnalysis.value);
     this.match("RESERVED_CLASS");
     this.stringTraduccion += this.preAnalysis.value;
-    this.g.addNode(this.preAnalysis.value);
-    let fatherAux =  this.preAnalysis.value;
-    this.g.addEdge(this.tokenList[this.numPreAnalysis - 1].value, this.preAnalysis.value);
     this.match("ID");
     this.stringTraduccion += ":\n";
-    this.g.addNode(this.preAnalysis.value);
-    this.g.addEdge(this.tokenList[this.numPreAnalysis - 1].value, this.preAnalysis.value);
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
     this.ListaDeclaracionMetodosFunciones();
     this.stringTraduccion += "\n";
-    this.g.addNode(this.preAnalysis.value);
-    this.g.addEdge(fatherAux, this.preAnalysis.value);
     this.match("RIGHT_BRACE");
     this.contTab--; // Indenta contenido para manterner clases aisladas
   }
@@ -80,7 +65,10 @@ class Parser {
   ListaClases() {
     this.Comentario();
     // SENTENCIA_CLASE LISTA_CLASES
-    if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+    if (
+      this.preAnalysis.type == "RESERVED_PUBLIC" &&
+      this.tokenList[this.numPreAnalysis + 1].type == "RESERVED_CLASS"
+    ) {
       this.tabular();
       this.match("RESERVED_PUBLIC");
       this.SentenciaClase();
@@ -122,7 +110,9 @@ class Parser {
       this.errorFound == true
     ) {
       this.errorFound = false;
-      let newError = new Error('Se recuperó con el simpolo ; o } en la fila ' + this.preAnalysis.row);
+      let newError = new Error(
+        "Se recuperó del error en la fila " + this.preAnalysis.row
+      );
       this.errorList.push(newError);
       this.numPreAnalysis++;
       this.preAnalysis = this.tokenList[this.numPreAnalysis];
@@ -134,6 +124,20 @@ class Parser {
   ListaDeclaracionFunciones() {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      this.DeclaracionFunciones();
+      this.ListaDeclaracionFunciones();
+    } else if (
+      (this.preAnalysis.type == "SEMICOLON" ||
+        this.preAnalysis.type == "RIGHT_BRACE") &&
+      this.errorFound == true
+    ) {
+      this.errorFound = false;
+      let newError = new Error(
+        "Se recuperó del error en la fila " + this.preAnalysis.row
+      );
+      this.errorList.push(newError);
+      this.numPreAnalysis++;
+      this.preAnalysis = this.tokenList[this.numPreAnalysis];
       this.DeclaracionFunciones();
       this.ListaDeclaracionFunciones();
     }
@@ -173,7 +177,7 @@ class Parser {
     this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
     this.stringTraduccion += "self ";
-    this.match("RESERVED_VOID");
+    this.Tipo();
     this.stringTraduccion += this.preAnalysis.value;
     this.match("ID");
     this.stringTraduccion += this.preAnalysis.value;
@@ -253,29 +257,34 @@ class Parser {
   Tipo() {
     if (this.preAnalysis.type == "RESERVED_INT") {
       if (this.forFound != true && this.defFound != true) {
-        this.stringTraduccion += "var ";
+        this.stringTraduccion += "";
       }
       this.match("RESERVED_INT");
     } else if (this.preAnalysis.type == "RESERVED_BOOLEAN") {
       if (this.forFound != true || this.defFound != true) {
-        this.stringTraduccion += "var ";
+        this.stringTraduccion += "";
       }
       this.match("RESERVED_BOOLEAN");
     } else if (this.preAnalysis.type == "RESERVED_DOUBLE") {
       if (this.forFound != true || this.defFound != true) {
-        this.stringTraduccion += "var ";
+        this.stringTraduccion += "";
       }
       this.match("RESERVED_DOUBLE");
     } else if (this.preAnalysis.type == "RESERVED_STRING") {
       if (this.forFound != true || this.defFound != true) {
-        this.stringTraduccion += "var ";
+        this.stringTraduccion += "";
       }
       this.match("RESERVED_STRING");
     } else if (this.preAnalysis.type == "RESERVED_CHAR") {
       if (this.forFound != true || this.defFound != true) {
-        this.stringTraduccion += "var ";
+        this.stringTraduccion += "";
       }
       this.match("RESERVED_CHAR");
+    } else if (this.preAnalysis.type == "RESERVED_VOID") {
+      if (this.forFound != true || this.defFound != true) {
+        this.stringTraduccion += "";
+      }
+      this.match("RESERVED_VOID");
     }
   }
 
@@ -285,8 +294,10 @@ class Parser {
       this.tabular();
       this.SentenciaIf();
     } else if (this.preAnalysis.type == "RESERVED_WHILE") {
-      this.tabular();
-      this.SentenciaWhile();
+      if (this.whileOfDo != true) {
+        this.tabular();
+        this.SentenciaWhile();
+      }
     } else if (this.preAnalysis.type == "RESERVED_DO") {
       this.tabular();
       this.SentenciaDoWhile();
@@ -341,6 +352,18 @@ class Parser {
     ) {
       this.tabular();
       this.DeclaracionVariable();
+    } else if (
+      this.preAnalysis.type == "ID" &&
+      this.tokenList[this.numPreAnalysis + 1].type == "INCREMENT_OPT"
+    ) {
+      this.tabular();
+      this.Incrementable();
+    } else if (
+      this.preAnalysis.type == "ID" &&
+      this.tokenList[this.numPreAnalysis + 1].type == "DECRE_OPT"
+    ) {
+      this.tabular();
+      this.Decrementable();
     }
   }
 
@@ -355,8 +378,10 @@ class Parser {
       this.Instruccion();
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_WHILE") {
-      this.Instruccion();
-      this.ListaInstruccionesP();
+      if (this.whileOfDo != true) {
+        this.Instruccion();
+        this.ListaInstruccionesP();
+      }
     } else if (this.preAnalysis.type == "RESERVED_FOR") {
       this.Instruccion();
       this.ListaInstruccionesP();
@@ -417,48 +442,105 @@ class Parser {
       this.errorFound == true
     ) {
       this.errorFound = false;
-      let newError = new Error('Se recuperó con el simpolo ; o } en la fila ' + this.preAnalysis.row);
+      let newError = new Error(
+        "Se recuperó del error en la fila " + this.preAnalysis.row
+      );
       this.errorList.push(newError);
       this.numPreAnalysis++;
       this.preAnalysis = this.tokenList[this.numPreAnalysis];
       this.Instruccion();
       this.ListaInstruccionesP();
-    } 
+    } else if (
+      this.preAnalysis.type == "ID" &&
+      this.tokenList[this.numPreAnalysis + 1].type == "INCREMENT_OPT"
+    ) {
+      this.Instruccion();
+      this.ListaInstruccionesP();
+    } else if (
+      this.preAnalysis.type == "ID" &&
+      this.tokenList[this.numPreAnalysis + 1].type == "DECRE_OPT"
+    ) {
+      this.Instruccion();
+      this.ListaInstruccionesP();
+    }
   }
 
   ListaInstrLlaves() {
     this.match("LEFT_BRACE");
     this.contTab++;
     this.ListaInstrucciones();
-    this.stringTraduccion += "\n";
+    if (this.doWhileFound == true) {
+      this.doWhileContent += "\n";
+    } else {
+      this.stringTraduccion += "\n";
+    }
     this.match("RIGHT_BRACE");
     this.contTab--;
   }
 
+  Incrementable() {
+    this.match("ID");
+    this.match("INCREMENT_OPT");
+    thismatch("SEMICOLON");
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " += 1";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " += 1";
+    }
+  }
+
+  Decrementable() {
+    this.match("ID");
+    this.match("DECREM_OPT");
+    thismatch("SEMICOLON");
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " -= 1";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " -= 1";
+    }
+  }
+
   SentenciaReturnMetodos() {
-    this.stringTraduccion += this.preAnalysis.value;
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value;
+    } else {
+      this.stringTraduccion += this.preAnalysis.value;
+    }
     this.match("RESERVED_RETURN");
     this.E(); // Podría omitirse
     this.match("SEMICOLON");
   }
 
   SentenciaReturnFunciones() {
-    this.stringTraduccion += this.preAnalysis.value + " ";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " ";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " ";
+    }
     this.match("RESERVED_RETURN");
     this.E();
     this.match("SEMICOLON");
   }
 
   AsignacionSimple() {
-    this.stringTraduccion += this.preAnalysis.value + " ";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " ";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " ";
+    }
     this.match("ID");
     this.AsignacionSimpleP();
   }
 
   AsignacionSimpleP() {
-    this.stringTraduccion += this.preAnalysis.value + " ";
+    if(this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + ' ';
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + ' ';
+    }
     this.match("EQUALS_SIGN");
     this.E();
+    this.stringTraduccion += "\n";
     this.match("SEMICOLON");
   }
 
@@ -524,12 +606,18 @@ class Parser {
 
   SentenciaContinue() {
     this.stringTraduccion += "continue";
+    if (this.doWhileFound) {
+      this.doWhileContent += "continue";
+    }
     this.match("RESERVED_CONTINUE");
     this.match("SEMICOLON");
   }
 
   SentenciaBreak() {
     this.stringTraduccion += "break";
+    if (this.doWhileFound) {
+      this.doWhileContent += "break";
+    }
     this.match("RESERVED_BREAK");
     this.match("SEMICOLON");
   }
@@ -540,12 +628,14 @@ class Parser {
       this.preAnalysis.type == "COMMENT"
     ) {
       if (this.preAnalysis.type == "MULTILINE_COMMENT") {
-        this.preAnalysis.value = this.preAnalysis.value.replace("/*", "#");
+        this.preAnalysis.value = this.preAnalysis.value.replace("/*", "# ");
         this.preAnalysis.value = this.preAnalysis.value.replace("*/", "");
+        this.preAnalysis.value = this.preAnalysis.value.replace("*", "");
+        this.preAnalysis.value = this.preAnalysis.value.replace("*", "");
         this.tabular();
         this.stringTraduccion += this.preAnalysis.value + "\n";
       } else if (this.preAnalysis.type == "COMMENT") {
-        this.preAnalysis.value = this.preAnalysis.value.replace("//", "#");
+        this.preAnalysis.value = this.preAnalysis.value.replace("//", "# ");
         this.tabular();
         this.stringTraduccion += this.preAnalysis.value + "\n";
       }
@@ -559,36 +649,68 @@ class Parser {
     this.match("DOT");
     this.match("RESERVED_OUT");
     this.match("DOT");
-    this.stringTraduccion += "print";
+
+    if (this.doWhileFound) {
+      this.doWhileContent += "print";
+    } else {
+      this.stringTraduccion += "print";
+    }
     this.match("RESERVED_PRINTLN");
-    this.stringTraduccion += this.preAnalysis.value;
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value;
+    } else {
+      this.stringTraduccion += this.preAnalysis.value;
+    }
     this.match("LEFT_PARENT");
-    this.stringTraduccion += this.preAnalysis.value;
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value;
+    } else {
+      this.stringTraduccion += this.preAnalysis.value;
+    }
     this.match("STRING");
-    this.stringTraduccion += this.preAnalysis.value + "\n";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + "\n";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + "\n";
+    }
     this.match("RIGHT_PARENT");
     this.match("SEMICOLON");
   }
 
   SentenciaWhile() {
-    this.stringTraduccion += this.preAnalysis.value + " ";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " ";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " ";
+    }
     this.match("RESERVED_WHILE");
     this.match("LEFT_PARENT");
     this.Expresion();
-    this.stringTraduccion += ":\n";
+    if (this.doWhileFound) {
+      this.doWhileContent += ":\n";
+    } else {
+      this.stringTraduccion += ":\n";
+    }
     this.match("RIGHT_PARENT");
     this.ListaInstrLlaves();
   }
 
   SentenciaIf() {
     if (this.elifFound != true) {
-      this.stringTraduccion += this.preAnalysis.value + " ";
-    } else {
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
     }
     this.match("RESERVED_IF");
     this.match("LEFT_PARENT");
     this.Expresion();
-    this.stringTraduccion += ":\n";
+    if (this.doWhileFound) {
+      this.doWhileContent += ":\n";
+    } else {
+      this.stringTraduccion += ":\n";
+    }
     this.match("RIGHT_PARENT");
     this.ListaInstrLlaves();
     this.OpcionElse();
@@ -596,6 +718,12 @@ class Parser {
 
   OpcionElse() {
     if (this.preAnalysis.type == "RESERVED_ELSE") {
+      this.tabular();
+      if (this.doWhileFound) {
+        this.doWhileContent += "else:\n";
+      } else {
+        this.stringTraduccion += "else:\n";
+      }
       this.match("RESERVED_ELSE");
       this.ListaIf();
     }
@@ -603,38 +731,60 @@ class Parser {
 
   ListaIf() {
     if (this.preAnalysis.type == "LEFT_BRACE") {
-      this.tabular();
-      this.stringTraduccion += "else:\n";
       this.ListaInstrLlaves();
     }
     if (this.preAnalysis.type == "RESERVED_IF") {
       this.tabular();
-      this.stringTraduccion += "elif ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "elif ";
+      } else {
+        this.stringTraduccion += "elif ";
+      }
       this.elifFound = true;
       this.SentenciaIf();
     }
   }
 
   SentenciaDoWhile() {
+    this.doWhileFound = true;
     this.match("RESERVED_DO");
+    this.whileOfDo = true;
     this.ListaInstrLlaves();
+    this.doWhileFound = false;
     this.match("RESERVED_WHILE");
     this.match("LEFT_PARENT");
     this.stringTraduccion += "while ";
     this.Expresion();
     this.match("RIGHT_PARENT");
+    this.match("SEMICOLON");
+    this.stringTraduccion += ":\n";
+    this.stringTraduccion += this.doWhileContent;
+    this.doWhileContent = "";
+    this.whileOfDo = false;
   }
 
   SentenciaFor() {
     this.forFound = true;
-    this.stringTraduccion += "for ";
+    if (this.doWhileFound) {
+      this.doWhileContent += "for ";
+    } else {
+      this.stringTraduccion += "for ";
+    }
     this.match("RESERVED_FOR");
     this.match("LEFT_PARENT");
     this.DeclaracionFor();
-    this.stringTraduccion += "in range(" + this.forValue1 + ",";
+    if (this.doWhileFound) {
+      this.doWhileContent += "in range(" + this.forValue1 + ",";
+    } else {
+      this.stringTraduccion += "in range(" + this.forValue1 + ",";
+    }
     this.match("SEMICOLON");
     this.Expresion();
-    this.stringTraduccion += this.forValue2 + "):\n";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.forValue2 + "):\n";
+    } else {
+      this.stringTraduccion += this.forValue2 + "):\n";
+    }
     this.match("SEMICOLON");
     this.match("ID");
     this.IncrementoDecremento();
@@ -647,13 +797,21 @@ class Parser {
 
   DeclaracionFor() {
     if (this.preAnalysis.type == "ID") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
       this.match("ID");
       this.match("EQUALS_SIGN");
       this.E();
     } else {
       this.Tipo();
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
       this.match("ID");
       this.match("EQUALS_SIGN");
       this.E();
@@ -677,24 +835,40 @@ class Parser {
 
   OperadorNot() {
     if (this.preAnalysis.type == "NOT_OPT") {
-      this.stringTraduccion += "not ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "not ";
+      } else {
+        this.stringTraduccion += "not ";
+      }
       this.match("NOT_OPT");
     }
   }
 
   Condicion() {
     if (this.preAnalysis.type == "AND_OPT") {
-      this.stringTraduccion += "and ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "and ";
+      } else {
+        this.stringTraduccion += "and ";
+      }
       this.match("AND_OPT");
       this.Expresion();
     }
     if (this.preAnalysis.type == "OR_OPT") {
-      this.stringTraduccion += "or ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "or ";
+      } else {
+        this.stringTraduccion += "or ";
+      }
       this.match("OR_OPT");
       this.Expresion();
     }
     if (this.preAnalysis.type == "XOR_OPT") {
-      this.stringTraduccion += "xor ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "xor ";
+      } else {
+        this.stringTraduccion += "xor ";
+      }
       this.match("XOR_OPT");
       this.Expresion();
     }
@@ -703,33 +877,66 @@ class Parser {
   CondicionLogica() {
     if (this.preAnalysis.type == "GREATER_EQL") {
       if (this.forFound != true) {
-        this.stringTraduccion += "< ";
+        if (this.doWhileFound) {
+          this.doWhileContent += ">= ";
+        } else {
+          this.stringTraduccion += ">= ";
+        }
       }
       this.match("GREATER_EQL");
       this.E();
     } else if (this.preAnalysis.type == "LESS_EQL") {
       if (this.forFound != true) {
-        this.stringTraduccion += "< ";
+        if (this.doWhileFound) {
+          this.doWhileContent += "<= ";
+        } else {
+          this.stringTraduccion += "<= ";
+        }
       }
       this.match("LESS_EQL");
       this.E();
     } else if (this.preAnalysis.type == "LESS_THAN") {
       if (this.forFound != true) {
-        this.stringTraduccion += "< ";
+        if (this.doWhileFound) {
+          this.doWhileContent += "< ";
+        } else {
+          this.stringTraduccion += "< ";
+        }
       }
+
       this.match("LESS_THAN");
       this.E();
     } else if (this.preAnalysis.type == "GREATER_THAN") {
       if (this.forFound != true) {
-        this.stringTraduccion += "< ";
+        if (this.doWhileFound) {
+          this.doWhileContent += "> ";
+        } else {
+          this.stringTraduccion += "> ";
+        }
       }
+
       this.match("GREATER_THAN");
       this.E();
     } else if (this.preAnalysis.type == "INEQUALITY") {
       if (this.forFound != true) {
-        this.stringTraduccion += "< ";
+        if (this.doWhileFound) {
+          this.doWhileContent += "!= ";
+        } else {
+          this.stringTraduccion += "!= ";
+        }
       }
+
       this.match("INEQUALITY");
+      this.E();
+    } else if (this.preAnalysis.type == "EQUALS_SIGN") {
+      if (this.forFound != true) {
+        if (this.doWhileFound) {
+          this.doWhileContent += "== ";
+        } else {
+          this.stringTraduccion += "== ";
+        }
+      }
+      this.match("EQUALS_SIGN");
       this.E();
     }
   }
@@ -741,13 +948,21 @@ class Parser {
 
   EP() {
     if (this.preAnalysis.type == "PLUS_SIGN") {
-      this.stringTraduccion += "+ ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "+ ";
+      } else {
+        this.stringTraduccion += "+ ";
+      }
       this.match("PLUS_SIGN");
       this.T();
       this.EP();
     }
     if (this.preAnalysis.type == "SUBS_SIGN") {
-      this.stringTraduccion += "- ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "- ";
+      } else {
+        this.stringTraduccion += "- ";
+      }
       this.match("SUBS_SIGN");
       this.T();
       this.EP();
@@ -761,13 +976,21 @@ class Parser {
 
   TP() {
     if (this.preAnalysis.type == "MULT_SIGN") {
-      this.stringTraduccion += "* ";
+      if (this.doWhileFound) {
+        this.doWhileContent += "* ";
+      } else {
+        this.stringTraduccion += "* ";
+      }
       this.match("MULT_SIGN");
       this.F();
       this.TP();
     }
     if (this.preAnalysis.type == "DIV_SIGN") {
-      this.stringTraduccion += "/";
+      if (this.doWhileFound) {
+        this.doWhileContent += "/ ";
+      } else {
+        this.stringTraduccion += "/";
+      }
       this.match("DIV_SIGN");
       this.F();
       this.TP();
@@ -777,7 +1000,11 @@ class Parser {
   F() {
     if (this.preAnalysis.type == "NUMBER") {
       if (this.forFound != true) {
-        this.stringTraduccion += this.preAnalysis.value + " ";
+        if (this.doWhileFound) {
+          this.doWhileContent += this.preAnalysis.value + " ";
+        } else {
+          this.stringTraduccion += this.preAnalysis.value + " ";
+        }
       } else if (this.forFound == true && this.forValue1 == "") {
         this.forValue1 = this.preAnalysis.value;
       } else if (
@@ -790,7 +1017,11 @@ class Parser {
       this.match("NUMBER");
     } else if (this.preAnalysis.type == "ID") {
       if (this.forFound != true) {
-        this.stringTraduccion += this.preAnalysis.value + " ";
+        if (this.doWhileFound) {
+          this.doWhileContent += this.preAnalysis.value + " ";
+        } else {
+          this.stringTraduccion += this.preAnalysis.value + " ";
+        }
       } else if (this.forFound == true && this.forValue1 == "") {
         this.forValue1 = this.preAnalysis.value;
       } else if (
@@ -802,55 +1033,68 @@ class Parser {
       }
       this.match("ID");
     } else if (this.preAnalysis.type == "DECIMAL") {
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      }
       this.match("DECIMAL");
     } else if (this.preAnalysis.type == "RESERVED_TRUE") {
-      this.stringTraduccion += "True";
+      if (this.doWhileFound) {
+        this.doWhileContent += "True ";
+      } else {
+        this.stringTraduccion += "True";
+      }
       this.match("RESERVED_TRUE");
     } else if (this.preAnalysis.type == "RESERVED_FALSE") {
-      this.stringTraduccion += "False";
+      if (this.doWhileFound) {
+        this.doWhileContent += "False ";
+      } else {
+        this.stringTraduccion += "False";
+      }
       this.match("RESERVED_FALSE");
     } else if (this.preAnalysis.type == "LEFT_PARENT") {
       this.match("LEFT_PARENT");
       this.E();
       this.match("RIGHT_PARENT");
     } else if (this.preAnalysis.type == "STRING") {
-      this.stringTraduccion += this.preAnalysis.value;
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value;
+      } else {
+        this.stringTraduccion += this.preAnalysis.value;
+      }
       this.match("STRING");
     }
   }
 
   match(type) {
-    if (this.preAnalysis.type != type) {
-      if (this.errorFound == false) {
-        let newError = new Error("Error encontrado, se esperaba " + type);
-        this.errorList.push(newError);
-        this.errorFound = true;
-      }
-    }
-
-    if (
-      (this.errorFound == true &&
-        type == "SEMICOLON" &&
-        this.preAnalysis.type == "SEMICOLON") ||
-      (this.errorFound == true &&
-        type == "RIGHT_BRACE" &&
-        this.preAnalysis.type == "RIGHT_BRACE")
-    ) {
-      this.errorFound = false;
-      console.log('Se empieza a analizar normal a partir de la fila', this.preAnalysis.row);
-    }
-
-    if (this.preAnalysis.type != "LAST") {
-      if (this.errorFound == true) {
+    this.Comentario();
+    if (this.errorFound) {
+      if (this.numPreAnalysis < this.tokenList.length - 1) {
+        this.numPreAnalysis++;
+        this.preAnalysis = this.tokenList[this.numPreAnalysis];
         if (
-          this.preAnalysis.type != "SEMICOLON" &&
-          this.preAnalysis.type != "RIGHT_BRACE" &&
-          this.preAnalysis.type != "LAST"
+          this.preAnalysis.type == "SEMICOLON" ||
+          this.preAnalysis.type == "RIGHT_BRACE"
         ) {
-          this.numPreAnalysis++;
-          this.preAnalysis = this.tokenList[this.numPreAnalysis];
+          this.errorFound = false;
+          let newError = new Error(
+            "Se recuperó del error en la fila " + this.preAnalysis.row
+          );
+          this.errorList.push(newError);
         }
-      } else {
+      }
+    } else {
+      if (this.preAnalysis.type != type) {
+        if (this.errorFound == false) {
+          console.log("Se esperaba", type);
+          let newError = new Error("Error encontrado, se esperaba " + type);
+          this.errorList.push(newError);
+          this.errorFound = true;
+        }
+      }
+      if (this.preAnalysis.type != "LAST") {
+        if (this.preAnalysis.type != type) {
+          this.errorFound = true;
+        }
         this.numPreAnalysis++;
         this.preAnalysis = this.tokenList[this.numPreAnalysis];
       }
@@ -860,8 +1104,13 @@ class Parser {
   // Demás funciones
   tabular() {
     for (var i = 0; i < this.contTab; i++) {
-      this.stringTraduccion += "\t";
+      if (this.doWhileFound == true) {
+        this.doWhileContent += "\t";
+      } else {
+        this.stringTraduccion += "\t";
+      }
     }
   }
 }
+
 module.exports = Parser;

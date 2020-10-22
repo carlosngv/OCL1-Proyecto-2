@@ -182,9 +182,9 @@ class Scanner {
                 this.setToken("RIGHT_PARENT", char);
               } else if (char == "(") {
                 this.setToken("LEFT_PARENT", char);
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               }
             } else if (char == "-") {
@@ -234,9 +234,9 @@ class Scanner {
               } else if (char == "(") {
                 this.aux += char;
                 this.state = 17;
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               } else if (char == ",") {
                 this.setToken("COMMA", char);
@@ -307,9 +307,9 @@ class Scanner {
               } else if (char == "(") {
                 this.state = 17;
                 this.aux += char;
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               } else if (char == ",") {
                 this.setToken("COMMA", char);
@@ -340,9 +340,9 @@ class Scanner {
               } else if (char == "(") {
                 this.state = 17;
                 this.aux += char;
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               } else if (char == ",") {
                 this.setToken("COMMA", char);
@@ -383,9 +383,9 @@ class Scanner {
               } else if (char == "(") {
                 this.state = 17;
                 this.aux += char;
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               } else if (char == ",") {
                 this.setToken("COMMA", char);
@@ -430,9 +430,9 @@ class Scanner {
               } else if (char == "(") {
                 this.state = 17;
                 this.aux += char;
-              } else if (char == "}") {
-                this.setToken("LEFT_BRACE", char);
               } else if (char == "{") {
+                this.setToken("LEFT_BRACE", char);
+              } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
               } else if (char == ",") {
                 this.setToken("COMMA", char);
