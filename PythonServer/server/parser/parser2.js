@@ -1,4 +1,6 @@
 var Error = require("./error");
+const fs = require("fs");
+const { graphviz } = require("node-graphviz");
 
 class Parser {
   constructor(tokenList) {
@@ -20,6 +22,15 @@ class Parser {
     this.doWhileFound = false;
     this.doWhileContent = "";
     this.whileOfDo = false;
+
+    // AST
+    this.astString = "digraph G {\n";
+    this.nodeCont = 2;
+    this.inicioGraphed = false;
+    this.primeraSentenciaClase = false;
+    this.primeraSentenciaInterfaz = false;
+    this.primeraListaClases = false;
+    this.padreListaClases = "";
   }
 
   parse() {
@@ -27,16 +38,22 @@ class Parser {
   }
 
   Inicio() {
+    if (!this.inicioGraphed) {
+      this.astString += "n0" + '[label="INICIO"];\n';
+    }
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      if (!this.inicioGraphed) {
+        this.astString += "n1" + '[label="public"];\n';
+        this.inicioGraphed = true;
+        this.astString += "n0 -> n1;\n";
+      }
       this.match("RESERVED_PUBLIC");
       if (this.preAnalysis.type == "RESERVED_CLASS") {
-        // 'public' SENTENCIA_CLASE LISTA_CLASES 'ultimo'
         this.SentenciaClase();
         this.ListaClases();
         this.Inicio();
         //this.match("LAST");
       } else if (this.preAnalysis.type == "RESERVED_INTERFACE") {
-        // 'public' SENTENCIA_INTERFAZ LISTA_INTERFACES 'ultimo'
         this.SentenciaInterfaz();
         this.ListaInterfaces();
         this.Inicio();
@@ -44,20 +61,53 @@ class Parser {
       }
     } else {
       this.match("LAST");
+      this.astString += "}";
+      console.log(this.astString);
+      graphviz.circo(this.astString, "svg").then((pdf) => {
+        fs.writeFileSync("ast.svg", pdf);
+      });
     }
   }
 
   SentenciaClase() {
     // public class { LISTA_DECLARACION_METODOS_FUNCIONES }
+    if(!this.primeraSentenciaClase){
+      this.astString += "n" + this.nodeCont + '[label="public"];\n';
+      this.nodeCont++;
+    } 
+    this.astString += "n" + this.nodeCont + '[label="SENTENCIA_CLASE"];\n';
+    let father = "n" + this.nodeCont;
+    if (!this.primeraSentenciaClase) {
+      this.astString += "n0->n" + (this.nodeCont - 1) + ";\n";
+      this.astString += "n0->n" + this.nodeCont + ";\n";
+      this.primeraSentenciaClase = true;
+    } else {
+      this.astString += this.padreListaClases + "->n" + this.nodeCont + ";\n";
+    }
+    this.nodeCont++;
     this.stringTraduccion += this.preAnalysis.value + " ";
+    this.astString += "n" + this.nodeCont + '[label="class"];\n';
+    this.nodeCont++;
+    this.astString +=
+      "n" + (this.nodeCont - 2) + "-> n" + (this.nodeCont - 1) + ";\n";
     this.match("RESERVED_CLASS");
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString +=
+      "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
     this.stringTraduccion += ":\n";
+    this.astString += "n" + this.nodeCont + '[label="{"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
     this.ListaDeclaracionMetodosFunciones();
     this.stringTraduccion += "\n";
+    this.astString += "n" + this.nodeCont + '[label="}"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_BRACE");
     this.contTab--; // Indenta contenido para manterner clases aisladas
   }
@@ -69,23 +119,54 @@ class Parser {
       this.preAnalysis.type == "RESERVED_PUBLIC" &&
       this.tokenList[this.numPreAnalysis + 1].type == "RESERVED_CLASS"
     ) {
+      if (!this.primeraListaClases) {
+        this.astString += "n" + this.nodeCont + '[label="LISTA_CLASES"];\n';
+        this.astString += "n0->n" + this.nodeCont + ";\n";
+        this.padreListaClases = "n" + this.nodeCont;
+        this.nodeCont++;
+        this.primeraListaClases = true;
+      }
       this.tabular();
       this.match("RESERVED_PUBLIC");
+      this.astString += "n" + this.nodeCont + '[label="public"];\n';
+      this.astString += this.padreListaClases + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.SentenciaClase();
       this.ListaClases();
     }
   }
 
   SentenciaInterfaz() {
-    // 'interface' id '{' LISTA_DECLARACION_METODOS'}'
+    this.astString += "n" + this.nodeCont + '[label="SENTENCIA_INTERFAZ"];\n';
+    let father = "n" + this.nodeCont;
+    if (!this.primeraSentenciaClase) {
+      this.astString += "n0->n" + this.nodeCont + ";\n";
+    } else {
+      this.astString +=
+        "n" + (this.nodeCont - 2) + "->n" + this.nodeCont + ";\n";
+    }
+    this.nodeCont++;
     this.stringTraduccion += "class ";
+    this.astString += "n" + this.nodeCont + '[label="interface"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_INTERFACE");
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString +=
+      "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
     this.stringTraduccion += ":\n";
+    this.astString += "n" + this.nodeCont + '[label="{"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
     this.ListaDeclaracionFunciones();
+    this.astString += "n" + this.nodeCont + '[label="}"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_BRACE");
     this.contTab--; // Indenta contenido para manterner clases aisladas
   }
@@ -216,7 +297,11 @@ class Parser {
       this.preAnalysis.type != "RIGHT_PARENT"
     ) {
       this.Tipo();
-      this.stringTraduccion += this.preAnalysis.value;
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value;
+      } else {
+        this.stringTraduccion += this.preAnalysis.value;
+      }
       this.match("ID");
       this.ListaParametros();
       this.stringTraduccion += this.preAnalysis.value + ":\n";
@@ -227,6 +312,11 @@ class Parser {
       this.preAnalysis.type == "RIGHT_PARENT"
     ) {
       this.stringTraduccion += this.preAnalysis.value + "\n";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + "\n";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + "\n";
+      }
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
     } else if (
@@ -234,10 +324,18 @@ class Parser {
       this.preAnalysis.type != "RIGHT_PARENT"
     ) {
       this.Tipo();
-      this.stringTraduccion += this.preAnalysis.value;
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value;
+      } else {
+        this.stringTraduccion += this.preAnalysis.value;
+      }
       this.match("ID");
       this.ListaParametros();
-      this.stringTraduccion += this.preAnalysis.value + "\n";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + "\n";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + "\n";
+      }
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
     }
@@ -245,10 +343,18 @@ class Parser {
 
   ListaParametros() {
     if (this.preAnalysis.type == "COMMA") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
       this.match("COMMA");
       this.Tipo();
-      this.stringTraduccion += this.preAnalysis.value;
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value;
+      } else {
+        this.stringTraduccion += this.preAnalysis.value;
+      }
       this.match("ID");
       this.ListaParametros();
     }
@@ -479,25 +585,25 @@ class Parser {
   }
 
   Incrementable() {
-    this.match("ID");
-    this.match("INCREMENT_OPT");
-    thismatch("SEMICOLON");
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value + " += 1";
     } else {
       this.stringTraduccion += this.preAnalysis.value + " += 1";
     }
+    this.match("ID");
+    this.match("INCREMENT_OPT");
+    this.match("SEMICOLON");
   }
 
   Decrementable() {
-    this.match("ID");
-    this.match("DECREM_OPT");
-    thismatch("SEMICOLON");
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value + " -= 1";
     } else {
       this.stringTraduccion += this.preAnalysis.value + " -= 1";
     }
+    this.match("ID");
+    this.match("DECREM_OPT");
+    thismatch("SEMICOLON");
   }
 
   SentenciaReturnMetodos() {
@@ -533,24 +639,36 @@ class Parser {
   }
 
   AsignacionSimpleP() {
-    if(this.doWhileFound) {
-      this.doWhileContent += this.preAnalysis.value + ' ';
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " ";
     } else {
-      this.stringTraduccion += this.preAnalysis.value + ' ';
+      this.stringTraduccion += this.preAnalysis.value + " ";
     }
     this.match("EQUALS_SIGN");
     this.E();
-    this.stringTraduccion += "\n";
+    if (this.doWhileFound) {
+      this.doWhileContent += "\n";
+    } else {
+      this.stringTraduccion += "\n";
+    }
     this.match("SEMICOLON");
   }
 
   Asignacion() {
     this.Comentario();
     if (this.preAnalysis.type == "EQUALS_SIGN") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
       this.match("EQUALS_SIGN");
       this.E();
-      this.stringTraduccion += "\n";
+      if (this.doWhileFound) {
+        this.doWhileContent += "\n";
+      } else {
+        this.stringTraduccion += "\n";
+      }
       this.match("SEMICOLON");
     }
   }
@@ -558,7 +676,11 @@ class Parser {
   DeclaracionVariable() {
     this.Comentario();
     this.Tipo();
-    this.stringTraduccion += this.preAnalysis.value + " ";
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value + " ";
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + " ";
+    }
     this.match("ID");
     this.DeclaracionVariableP();
   }
@@ -570,9 +692,17 @@ class Parser {
 
   ListaID() {
     if (this.preAnalysis.type == "COMMA") {
-      this.stringTraduccion += this.preAnalysis.value + " ";
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value + " ";
+      }
       this.match("COMMA");
-      this.stringTraduccion += this.preAnalysis.value;
+      if (this.doWhileFound) {
+        this.doWhileContent += this.preAnalysis.value + " ";
+      } else {
+        this.stringTraduccion += this.preAnalysis.value;
+      }
       this.match("ID");
       this.ListaID();
     }
@@ -580,9 +710,17 @@ class Parser {
 
   LlamadaMetodo() {
     this.llamadaMetodo = true;
-    this.stringTraduccion += this.preAnalysis.value;
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value;
+    } else {
+      this.stringTraduccion += this.preAnalysis.value;
+    }
     this.match("ID");
-    this.stringTraduccion += this.preAnalysis.value;
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value;
+    } else {
+      this.stringTraduccion += this.preAnalysis.value;
+    }
     this.match("LEFT_PARENT");
     this.DeclaracionParametros();
     this.match("SEMICOLON");
@@ -662,12 +800,12 @@ class Parser {
       this.stringTraduccion += this.preAnalysis.value;
     }
     this.match("LEFT_PARENT");
-    if (this.doWhileFound) {
+    /* if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value;
     } else {
       this.stringTraduccion += this.preAnalysis.value;
-    }
-    this.match("STRING");
+    } */
+    this.E();
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value + "\n";
     } else {
@@ -718,12 +856,6 @@ class Parser {
 
   OpcionElse() {
     if (this.preAnalysis.type == "RESERVED_ELSE") {
-      this.tabular();
-      if (this.doWhileFound) {
-        this.doWhileContent += "else:\n";
-      } else {
-        this.stringTraduccion += "else:\n";
-      }
       this.match("RESERVED_ELSE");
       this.ListaIf();
     }
@@ -731,6 +863,12 @@ class Parser {
 
   ListaIf() {
     if (this.preAnalysis.type == "LEFT_BRACE") {
+      this.tabular();
+      if (this.doWhileFound) {
+        this.doWhileContent += "else:\n";
+      } else {
+        this.stringTraduccion += "else:\n";
+      }
       this.ListaInstrLlaves();
     }
     if (this.preAnalysis.type == "RESERVED_IF") {
@@ -1018,9 +1156,9 @@ class Parser {
     } else if (this.preAnalysis.type == "ID") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
-          this.doWhileContent += this.preAnalysis.value + " ";
+          this.doWhileContent += this.preAnalysis.value + "";
         } else {
-          this.stringTraduccion += this.preAnalysis.value + " ";
+          this.stringTraduccion += this.preAnalysis.value + "";
         }
       } else if (this.forFound == true && this.forValue1 == "") {
         this.forValue1 = this.preAnalysis.value;
