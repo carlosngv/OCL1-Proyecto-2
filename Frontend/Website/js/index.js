@@ -145,26 +145,21 @@ function newEditor(index) {
   let editors = Array.prototype.slice.apply(
     document.querySelectorAll(".editor")
   );
-  console.log(editors);
-  console.log(indexAux);
   var editor = CodeMirror.fromTextArea(editors[indexAux], {
     lineNumbers: true,
     mode: "text/x-java",
     theme: "Dracula",
     matchBrackets: true,
     autoCloseBrackets: true,
-  })/* .on("change", (editor) => {
-    editors[indexAux].value = editor.getValue();
-  }); */
+  });
   editor.setSize("470", "450");
   editorList.push(editor);
-  console.log(editorList);
 }
 
 async function Scan(data) {
+  //let editorPython = CodeMirror.fromTextArea(document.getElementById("python-editor"));
   let url = "http://localhost:3000/scan";
-  console.log(data);
-  let data2 = {
+  let dataBody = {
     input: data,
   }
   await fetch(url, {
@@ -172,13 +167,8 @@ async function Scan(data) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data2),
+    body: JSON.stringify(dataBody),
   }).then(
-    (res) => {
-      console.log("Request complete! response:", res.json());
-    },
-    (err) => {
-      console.log(err);
-    }
-  )
+    res => { console.log(res.json())
+    });
 }

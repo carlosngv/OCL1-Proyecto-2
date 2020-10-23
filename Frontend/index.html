@@ -10,6 +10,8 @@
     <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
     <script src="Website/codemirror/lib/codemirror.js"></script>
     <script src="Website/codemirror/mode/clike/clike.js"></script>
+    <script src="Website/codemirror/mode/javascript/javascript.js"></script>
+    <script src="Website/codemirror/mode/python/python.js"></script>
     <link rel="stylesheet" href="Website/codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="Website/codemirror/theme/dracula.css">
     <script src="Website/codemirror/addon/edit/closebrackets.js"></script>
@@ -132,12 +134,15 @@
 
             <div class="col-sm-6">
                 <div class="output-terminals-container">
+                    Python
                     <div class="terminal-container">
-                        <textarea class="terminal" id="python-terminal" readonly cols="60" rows="10"
+                        <textarea class="terminal" id="python-editor" readonly cols="60" rows="10"
                             placeholder="Python"></textarea>
                     </div>
+                    <br>
                     <div class="terminal-container">
-                        <textarea class="terminal" id="js-terminal" readonly cols="60" rows="10"
+                        JavaScript
+                        <textarea class="terminal" id="js-editor" readonly cols="60" rows="10"
                             placeholder="JavaScript"></textarea>
                     </div>
                 </div>
@@ -157,18 +162,41 @@
             autofocus: true,
             lineWrapping: true
         }
+        const configPython = {
+            lineNumbers: true,
+            matchBrackets: true,
+            theme: "dracula",
+            autoCloseBrackets: true,
+            autofocus: true,
+            lineWrapping: true,
+            readOnly: true
+        }
+
+        const configJS = {
+            lineNumbers: true,
+            matchBrackets: true,
+            theme: "dracula",
+            autoCloseBrackets: true,
+            autofocus: true,
+            lineWrapping: true,
+            readOnly: true
+        }
+
+        const editorPython = CodeMirror.fromTextArea(document.getElementById("python-editor"), configPython);
+        editorPython.setSize("550", "300");
+        const editorJS = CodeMirror.fromTextArea(document.getElementById("js-editor"), configJS);
+        editorJS.setSize("550", "300");
         const editor = CodeMirror.fromTextArea(document.getElementById("editor"), config);
-        editor.setSize("470", "450");
+        editor.setSize("470", "600");
 
         const scanButton = document.getElementById('scan')
         scanButton.addEventListener("click", async () => {
             let url = 'http://localhost:3000/scan';
             let data = editor.getValue()
-            console.log(data)
+            let errorsAux = '';
             let data2 = {
                 input: data,
             }
-            console.log(data2)
             await fetch(url, {
                 method: "POST",
                 headers: {
@@ -176,10 +204,17 @@
                 },
                 body: JSON.stringify(data2)
             }).then(res => {
-                console.log("Request complete! response:", res.json());
-            }, err => {
-                console.log(err)
-            });
+                // editorPython.getDoc().setValue("");
+                console.log(res.clone().json());
+                res.clone().json()
+                    .then((data) =>{
+                        console.log(data['errors']);
+                        data['errors'].forEach(async error => {
+                        errorsAux += '>> ' + error['description'] + '\n'; 
+                        });
+                    });
+            })
+            editorPython.getDoc().setValue(errorsAux);
         })
 
     </script>
