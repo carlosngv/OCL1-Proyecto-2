@@ -31,6 +31,10 @@ class Parser {
     this.primeraSentenciaInterfaz = false;
     this.primeraListaClases = false;
     this.padreListaClases = "";
+    this.primeraDeclaracionMetodosFunciones = false;
+    this.padreDeclaracionMetodosFunciones = "";
+    this.padreDeclaracionFunciones = '';
+    this.primeraDeclaracionFunciones = false;
   }
 
   parse() {
@@ -103,7 +107,12 @@ class Parser {
     this.nodeCont++;
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
+    this.astString += "n" + this.nodeCont + '[label="LISTA_DECLARACION_METODOS_FUNC"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionMetodosFunciones = 'n' + this.nodeCont
+    this.nodeCont++;
     this.ListaDeclaracionMetodosFunciones();
+    this.padreDeclaracionMetodosFunciones = '';
     this.stringTraduccion += "\n";
     this.astString += "n" + this.nodeCont + '[label="}"];\n';
     this.astString += father + "->n" + this.nodeCont + ";\n";
@@ -164,6 +173,7 @@ class Parser {
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
     this.ListaDeclaracionFunciones();
+    this.padreDeclaracionFunciones = '';
     this.astString += "n" + this.nodeCont + '[label="}"];\n';
     this.astString += father + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
@@ -183,6 +193,9 @@ class Parser {
   ListaDeclaracionMetodosFunciones() {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      this.astString += "n" + this.nodeCont + '[label="DECLARACION_METODOS_FUNCIONES"];\n';
+      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.DeclaracionMetodosFunciones();
       this.ListaDeclaracionMetodosFunciones();
     } else if (
@@ -1203,7 +1216,7 @@ class Parser {
     }
   }
 
-  match(type) {
+  /* match(type) {
     this.Comentario();
     if (this.errorFound) {
       if (this.numPreAnalysis < this.tokenList.length - 1) {
@@ -1217,6 +1230,37 @@ class Parser {
           let newError = new Error(
             "Se recuperó del error en la fila " + this.preAnalysis.row
           );
+          this.errorList.push(newError);
+        }
+      }
+    } else {
+      if (this.preAnalysis.type != type) {
+        if (this.errorFound == false) {
+          console.log("Se esperaba", type);
+          let newError = new Error("Error encontrado, se esperaba " + type);
+          this.errorList.push(newError);
+          this.errorFound = true;
+        }
+      }
+      if (this.preAnalysis.type != "LAST") {
+        if (this.preAnalysis.type != type) {
+          this.errorFound = true;
+        }
+        this.numPreAnalysis++;
+        this.preAnalysis = this.tokenList[this.numPreAnalysis];
+      }
+    }
+  } */
+
+  match(type) {
+    this.Comentario();
+    if (this.errorFound) {
+      while(this.errorFound && this.numPreAnalysis < (this.tokenList.length - 1)) {
+        this.numPreAnalysis++;
+        this.preAnalysis = this.tokenList[this.numPreAnalysis];
+        if(this.preAnalysis.type == 'SEMICOLON' || this.preAnalysis.type == 'RIGHT_BRACE') {
+          this.errorFound = false;
+          let newError = new Error('Se recuperó del error en la fila ' + this.preAnalysis.row)
           this.errorList.push(newError);
         }
       }

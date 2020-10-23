@@ -10,9 +10,11 @@ scanRouter.post("/", (req, res) => {
   generateHTML(newScanner.tokenList);
   var newParser = new Parser(newScanner.tokenList);
   newParser.parse()
-  console.log(newParser.stringTraduccion);
+  /* console.log(newParser.stringTraduccion);
   console.log('---------------------------------------------------------------------------------');
-  console.log('ERRORES', newParser.errorList);
+  console.log('ERRORES', newParser.errorList); */
+  res.setHeader('Content-Type', 'application/json')
+  res.statusCode = 200;
   res.json({
     errors: newParser.errorList,
   });
