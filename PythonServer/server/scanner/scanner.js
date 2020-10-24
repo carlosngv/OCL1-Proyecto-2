@@ -10,8 +10,10 @@ class Scanner {
     var row;
     var state;
     var aux;
+    this.dataAux = "";
   }
   scan(input) {
+    this.dataAux = input;
     this.reservedList = [
       "main",
       "public",
@@ -63,7 +65,7 @@ class Scanner {
       "finally",
       "super",
       "this",
-      "args"
+      "args",
     ];
     this.tokenList = [];
     this.errorList = [];
@@ -144,8 +146,9 @@ class Scanner {
             } else if (char == "^") {
               this.aux += char;
               this.state = 16;
+            } else if (char.match(/^\s*$/g) || char == " " || char == "\t") {
             } else {
-              this.setError(char, "ERROR");
+              this.setError(char, "Carácter no válido en el lenguaje.");
             }
             break;
           case 1:
@@ -543,14 +546,14 @@ class Scanner {
             } else if (char.match(/[0-9]/)) {
               this.state = 10;
               this.aux += char;
-            }  else if (char.match(/[a-zA-Z]/i)) {
+            } else if (char.match(/[a-zA-Z]/i)) {
               this.state = 5;
               this.aux += char;
-            } else if (char == ')') {
+            } else if (char == ")") {
               this.setToken("RIGHT_PARENT", char);
-            } else if (char == '(') {
+            } else if (char == "(") {
               this.setToken("LEFT_PARENT", char);
-            } else if (char == '!') {
+            } else if (char == "!") {
               this.setToken("NOT_OPT", char);
             }
             break;
@@ -563,7 +566,7 @@ class Scanner {
       this.column = 0;
     }
     // Pushing LAST token.
-    let newToken = new Token('LAST', 'LAST', 0, 0);
+    let newToken = new Token("LAST", "LAST", 0, 0);
     this.tokenList.push(newToken);
   }
 
@@ -576,11 +579,15 @@ class Scanner {
   }
 
   setError(value, description) {
-    this.state = 0;
-    this.aux = "";
-    this.column = this.column + 1;
-    let newError = new Error(value, description, this.row, this.column);
-    this.errorList.push(newError);
+    if (value.match(/^\s*$/g) || value == " " || value == "\t") {
+    } else {
+      this.dataAux = this.dataAux.replace(value, "");
+      this.state = 0;
+      this.aux = "";
+      this.column = this.column + 1;
+      let newError = new Error(value, description, this.row, this.column);
+      this.errorList.push(newError);
+    }
   }
 
   setReserved(value) {

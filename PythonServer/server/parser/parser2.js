@@ -1,6 +1,7 @@
 var Error = require("./error");
 const fs = require("fs");
 const { graphviz } = require("node-graphviz");
+const {exec} = require('child_process')
 
 class Parser {
   constructor(tokenList) {
@@ -27,14 +28,77 @@ class Parser {
     this.astString = "digraph G {\n";
     this.nodeCont = 2;
     this.inicioGraphed = false;
+    // Class
     this.primeraSentenciaClase = false;
-    this.primeraSentenciaInterfaz = false;
     this.primeraListaClases = false;
     this.padreListaClases = "";
     this.primeraDeclaracionMetodosFunciones = false;
     this.padreDeclaracionMetodosFunciones = "";
+    this.padreListaDeclaracionMetodosFunciones = '';
+    // Interface
+    this.primeraSentenciaInterfaz = false;
     this.padreDeclaracionFunciones = '';
     this.primeraDeclaracionFunciones = false;
+    this.padreListaDeclaracionFunciones = '';
+    this.primeraListaDeclaracionFunciones = false;
+    // Tipo
+    this.padreTipo = '';
+    // Declaracion Parametros
+    this.padreDeclaracionParametros = '';
+    this.padreDeclaracionParametrosInterfaz = '';
+    // Lista de Parametros
+    this.padreListaParametros = '';
+    // Lista de instrucciones entre llaves
+    this.padreListaInstruccionesLlaves = '';
+    // Lista instrucciones
+    this.padreListaInstrucciones = '';
+    this.padreListaInstruccionesP = '';
+    // Instruccion
+    this.padreSentenciaMain = '';
+    this.padreInstruccion = '';
+    this.padreSentenciaIf = '';
+    this.padreSentenciaWhile = '';
+    this.padreSentenciaDoWhile = '';
+    this.padreSentenciaBreak = '';
+    this.padreAsignacionSimple = '';
+    this.padreDeclaracionVariable = '';
+    this.padreIncrementable = '';
+    this.padreDecrementable = '';
+    this.padreSentenciaContinue = '';
+    this.padreLlamadaMetodo = '';
+    this.padreSentenciaFor = '';
+    this.padreSentenciaReturnFunciones = ''
+    this.padreSentenciaReturnMetodos = ''
+    this.padreSentenciaPrint = ''
+
+    // E
+    this.padreE = '';
+    this.padreEP = '';
+    this.padreT = '';
+    this.padreTP = '';
+    this.padreF = '';
+
+    // for
+    this.padreDeclaracionFor = '';
+    this.padreIncrementoDecremento = '';
+
+    // Expresion
+    this.padreExpresion = '';
+    this.padreOperadorNot = '';
+    this.padreCondicion = ''
+    this.padreCondicionLogica = ''
+
+    // IF ELSE
+    this.padreOpcionElse = '';
+    this.padreListaIf = '';
+
+    // Asignacion
+    this.padreAsignacionSimpleP = '';
+    this.padreAsignacion = '';
+    this.padreListaID = '';
+    this.padreDeclaracionVariableP = '';
+
+
   }
 
   parse() {
@@ -66,9 +130,22 @@ class Parser {
     } else {
       this.match("LAST");
       this.astString += "}";
-      console.log(this.astString);
-      graphviz.circo(this.astString, "svg").then((pdf) => {
-        fs.writeFileSync("ast.svg", pdf);
+      fs.writeFile('ast.dot', this.astString, (error) => {
+        if(error){
+          console.log(error)
+        } 
+      });
+      exec("dot -Tpdf ast.dot -o public/ast.pdf", (error, data, getter) => {
+        if(error){
+          console.log("error",error.message);
+          return;
+        }
+        if(getter){
+          console.log("data",data);
+          return;
+        }
+        console.log("data",data);
+      
       });
     }
   }
@@ -109,10 +186,10 @@ class Parser {
     this.contTab++; // Indenta contenido dentro de la clase
     this.astString += "n" + this.nodeCont + '[label="LISTA_DECLARACION_METODOS_FUNC"];\n';
     this.astString += father + "->n" + this.nodeCont + ";\n";
-    this.padreDeclaracionMetodosFunciones = 'n' + this.nodeCont
+    this.padreListaDeclaracionMetodosFunciones = 'n' + this.nodeCont;
     this.nodeCont++;
     this.ListaDeclaracionMetodosFunciones();
-    this.padreDeclaracionMetodosFunciones = '';
+    this.padreListaDeclaracionMetodosFunciones = '';
     this.stringTraduccion += "\n";
     this.astString += "n" + this.nodeCont + '[label="}"];\n';
     this.astString += father + "->n" + this.nodeCont + ";\n";
@@ -172,8 +249,12 @@ class Parser {
     this.nodeCont++;
     this.match("LEFT_BRACE");
     this.contTab++; // Indenta contenido dentro de la clase
+    this.astString += "n" + this.nodeCont + '[label="LISTA_DECLARACION_FUNCIONES"];\n';
+    this.astString += father + "->n" + this.nodeCont + ";\n";
+    this.padreListaDeclaracionFunciones = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaDeclaracionFunciones();
-    this.padreDeclaracionFunciones = '';
+    this.padreListaDeclaracionFunciones = '';
     this.astString += "n" + this.nodeCont + '[label="}"];\n';
     this.astString += father + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
@@ -194,9 +275,11 @@ class Parser {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
       this.astString += "n" + this.nodeCont + '[label="DECLARACION_METODOS_FUNCIONES"];\n';
-      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.astString += this.padreListaDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreDeclaracionMetodosFunciones = 'n' + this.nodeCont;
       this.nodeCont++;
       this.DeclaracionMetodosFunciones();
+      this.padreDeclaracionMetodosFunciones = '';
       this.ListaDeclaracionMetodosFunciones();
     } else if (
       (this.preAnalysis.type == "SEMICOLON" ||
@@ -210,7 +293,12 @@ class Parser {
       this.errorList.push(newError);
       this.numPreAnalysis++;
       this.preAnalysis = this.tokenList[this.numPreAnalysis];
+      this.astString += "n" + this.nodeCont + '[label="DECLARACION_METODOS_FUNCIONES"];\n';
+      this.astString += this.padreListaDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreDeclaracionMetodosFunciones = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.DeclaracionMetodosFunciones();
+      this.padreDeclaracionMetodosFunciones = '';
       this.ListaDeclaracionMetodosFunciones();
     }
   }
@@ -218,7 +306,12 @@ class Parser {
   ListaDeclaracionFunciones() {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_PUBLIC") {
+      this.astString += "n" + this.nodeCont + '[label="DECLARACION_FUNCIONES"];\n';
+      this.astString += this.padreListaDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreDeclaracionFunciones = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.DeclaracionFunciones();
+      this.padreDeclaracionFunciones = '';
       this.ListaDeclaracionFunciones();
     } else if (
       (this.preAnalysis.type == "SEMICOLON" ||
@@ -232,7 +325,12 @@ class Parser {
       this.errorList.push(newError);
       this.numPreAnalysis++;
       this.preAnalysis = this.tokenList[this.numPreAnalysis];
+      this.astString += "n" + this.nodeCont + '[label="DECLARACION_FUNCIONES"];\n';
+      this.astString += this.padreListaDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreDeclaracionFunciones = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.DeclaracionFunciones();
+      this.padreDeclaracionFunciones = '';
       this.ListaDeclaracionFunciones();
     }
   }
@@ -241,14 +339,28 @@ class Parser {
     this.Comentario();
     this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
+    this.astString += "n" + this.nodeCont + '[label="public"];\n';
+    this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     if (this.preAnalysis.type == "RESERVED_VOID") {
       this.stringTraduccion += "def ";
       this.defFound = true;
       this.match("RESERVED_VOID");
+      this.astString += "n" + this.nodeCont + '[label="void"];\n';
+      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
     } else if (this.preAnalysis.type == "RESERVED_STATIC") {
       this.match("RESERVED_STATIC");
+      this.astString += "n" + this.nodeCont + '[label="static"];\n';
+      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.mainFound = true;
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_MAIN"];\n';
+      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaMain = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaMain();
+      this.padreSentenciaMain = '';
       return;
     } else if (
       this.preAnalysis.type != "RESERVED_VOID" &&
@@ -256,43 +368,109 @@ class Parser {
     ) {
       this.defFound = true;
       this.stringTraduccion += "def ";
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
       this.defFound = false;
     }
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n' + (this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="DECLARACION_PARAMETROS"];\n';
+    this.astString += this.padreDeclaracionMetodosFunciones + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionParametros = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.DeclaracionParametros();
+    this.padreDeclaracionParametros = '';
   }
 
   DeclaracionFunciones() {
     this.Comentario();
     this.tabular(); // ESTE ES FIJO
     this.match("RESERVED_PUBLIC");
+    this.astString += "n" + this.nodeCont + '[label="public"];\n';
+    this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.stringTraduccion += "self ";
+    
+    this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+    this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+    this.padreTipo = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Tipo();
+    this.padreTipo = '';
+
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n' + (this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
     this.stringTraduccion += this.preAnalysis.value;
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.stringTraduccion += this.preAnalysis.value;
+    this.astString += "n" + this.nodeCont + '[label="DECLARACION_PARAMETROS_INTERFAZ"];\n';
+    this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionParametrosInterfaz = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.DeclaracionParametrosInterfaz();
+    this.padreDeclaracionParametrosInterfaz = '';
   }
 
   DeclaracionParametrosInterfaz() {
     if (this.preAnalysis == "RIGHT PARENT") {
       this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
       this.stringTraduccion = this.preAnalysis.value + "\n";
+      this.astString += "n" + this.nodeCont + '[label=";"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("SEMICOLON");
     } else {
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
       this.stringTraduccion += this.preAnalysis.value;
       this.match("ID");
+      this.astString += "n" + this.nodeCont + '[label="LISTA_PARAMETROS"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.padreListaParametros = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaParametros();
+      this.padreListaParametros = '';
       this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
       this.stringTraduccion += this.preAnalysis.value + "\n";
+      this.astString += "n" + this.nodeCont + '[label=";"];\n';
+      this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("SEMICOLON");
     }
   }
@@ -303,23 +481,58 @@ class Parser {
       this.llamadaMetodo == false
     ) {
       this.stringTraduccion += this.preAnalysis.value + ":\n";
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
+      this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCION_LLAVES"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaInstrLlaves();
+      this.padreListaInstruccionesLlaves = '';
     } else if (
       this.llamadaMetodo == false &&
       this.preAnalysis.type != "RIGHT_PARENT"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
+
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value;
       } else {
         this.stringTraduccion += this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
+
+      this.astString += "n" + this.nodeCont + '[label="LISTA_PARAMETROS"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreListaParametros = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaParametros();
+      this.padreListaParametros = '';
+
       this.stringTraduccion += this.preAnalysis.value + ":\n";
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
+      this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCION_LLAVES"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaInstrLlaves();
+      this.padreListaInstruccionesLlaves = '';
     } else if (
       this.llamadaMetodo == true &&
       this.preAnalysis.type == "RIGHT_PARENT"
@@ -330,25 +543,50 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value + "\n";
       }
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
     } else if (
       this.llamadaMetodo == true &&
       this.preAnalysis.type != "RIGHT_PARENT"
     ) {
+      
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
+
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value;
       } else {
         this.stringTraduccion += this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
+
+      this.astString += "n" + this.nodeCont + '[label="LISTA_PARAMETROS"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.padreListaParametros = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaParametros();
+      this.padreListaParametros = '';
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value + "\n";
       } else {
         this.stringTraduccion += this.preAnalysis.value + "\n";
       }
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
       this.llamadaMetodo = false;
     }
@@ -361,13 +599,28 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
+      this.astString += "n" + this.nodeCont + '[label=","];\n';
+      this.astString += this.padreListaParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("COMMA");
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreListaParametros + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value;
       } else {
         this.stringTraduccion += this.preAnalysis.value;
       }
+
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreListaParametros + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
       this.ListaParametros();
     }
@@ -378,31 +631,49 @@ class Parser {
       if (this.forFound != true && this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="int"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_INT");
     } else if (this.preAnalysis.type == "RESERVED_BOOLEAN") {
       if (this.forFound != true || this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="boolean"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_BOOLEAN");
     } else if (this.preAnalysis.type == "RESERVED_DOUBLE") {
       if (this.forFound != true || this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="double"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_DOUBLE");
     } else if (this.preAnalysis.type == "RESERVED_STRING") {
       if (this.forFound != true || this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="string"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_STRING");
     } else if (this.preAnalysis.type == "RESERVED_CHAR") {
       if (this.forFound != true || this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="char"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_CHAR");
     } else if (this.preAnalysis.type == "RESERVED_VOID") {
       if (this.forFound != true || this.defFound != true) {
         this.stringTraduccion += "";
       }
+      this.astString += "n" + this.nodeCont + '[label="void"];\n';
+      this.astString += this.padreTipo + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_VOID");
     }
   }
@@ -411,57 +682,118 @@ class Parser {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_IF") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_IF"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaIf = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaIf();
+      this.padreSentenciaIf = '';
     } else if (this.preAnalysis.type == "RESERVED_WHILE") {
       if (this.whileOfDo != true) {
         this.tabular();
+        this.astString += "n" + this.nodeCont + '[label="SENTENCIA_WHILE"];\n';
+        this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+        this.padreSentenciaWhile = 'n' + this.nodeCont;
+        this.nodeCont++;
         this.SentenciaWhile();
+        this.padreSentenciaWhile = '';
       }
     } else if (this.preAnalysis.type == "RESERVED_DO") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_DO_WHILE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaDoWhile = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaDoWhile();
+      this.padreSentenciaDoWhile = '';
+
     } else if (this.preAnalysis.type == "RESERVED_FOR") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_FOR"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaFor = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaFor();
+      this.padreSentenciaFor = '';
     } else if (this.preAnalysis.type == "RESERVED_SYSTEM") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_PRINT"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaPrint = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaPrint();
+      this.padreSentenciaPrint = '';
     } else if (this.preAnalysis.type == "RESERVED_CONTINUE") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_CONTINUE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaContinue = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaContinue();
+      this.padreSentenciaContinue = '';
     } else if (this.preAnalysis.type == "RESERVED_BREAK") {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_BREAK"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaBreak = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaBreak();
+      this.padreSentenciaBreak = '';
     } else if (
       this.preAnalysis.type == "RESERVED_PUBLIC" &&
       this.tokenList[this.numPreAnalysis + 1].type == "RESERVED_STATIC"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_MAIN"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaMain = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaMain();
+      this.padreSentenciaMain = '';
     } else if (
       this.preAnalysis.type == "RESERVED_RETURN" &&
       this.tokenList[this.numPreAnalysis + 1].type == "SEMICOLON"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_RETURN_METODOS"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaReturnMetodos = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaReturnMetodos();
+      this.padreSentenciaReturnMetodos = '';
     } else if (
       this.preAnalysis.type == "RESERVED_RETURN" &&
       this.tokenList[this.numPreAnalysis + 1].type != "SEMICOLON"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_RETURN_FUNCIONES"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaReturnFunciones= 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaReturnFunciones();
+      this.padreSentenciaReturnFunciones= '';
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "LEFT_PARENT"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="LLAMADA_METODO"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreLlamadaMetodo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.LlamadaMetodo();
+      this.padreLlamadaMetodo = '';
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "EQUALS_SIGN"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="ASIGNACION_SIMPLE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreAsignacionSimple = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.AsignacionSimple();
+      this.padreAsignacionSimple = '';
     } else if (
       this.preAnalysis.type == "RESERVED_INT" ||
       this.preAnalysis.type == "RESERVED_CHAR" ||
@@ -470,81 +802,167 @@ class Parser {
       this.preAnalysis.type == "RESERVED_DOUBLE"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="DECLARACION_VARIABLE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreDeclaracionVariable = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.DeclaracionVariable();
+      this.padreDeclaracionVariable = '';
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "INCREMENT_OPT"
     ) {
       this.tabular();
+      this.astString += "n" + this.nodeCont + '[label="INCREMENTABLE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreIncrementable = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Incrementable();
+      this.padreIncrementable = '';
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "DECRE_OPT"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="DECREMENTABLE"];\n';
+      this.astString += this.padreInstruccion + "->n" + this.nodeCont + ";\n";
+      this.padreDecrementable = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.tabular();
       this.Decrementable();
+      this.padreDecrementable = '';
     }
   }
 
   ListaInstrucciones() {
+    this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+    this.astString += this.padreListaInstrucciones + "->n" + this.nodeCont + ";\n";
+    this.padreInstruccion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Instruccion();
-    this.ListaInstruccionesP();
+    this.padreInstruccion = '';
+    
+      this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONESP"];\n';
+      this.astString += this.padreListaInstrucciones + "->n" + this.nodeCont + ";\n";
+      this.padreListaInstruccionesP = 'n' + this.nodeCont;
+      this.nodeCont++;
+      this.ListaInstruccionesP();
+      //this.padreListaInstruccionesP = '';
   }
 
   ListaInstruccionesP() {
     this.Comentario();
     if (this.preAnalysis.type == "RESERVED_IF") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_WHILE") {
       if (this.whileOfDo != true) {
+        this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+        this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+        this.padreInstruccion = 'n' + this.nodeCont;
+        this.nodeCont++;
         this.Instruccion();
+        this.padreInstruccion = '';
         this.ListaInstruccionesP();
       }
     } else if (this.preAnalysis.type == "RESERVED_FOR") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_DO") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_SYSTEM") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_BREAK") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (this.preAnalysis.type == "RESERVED_CONTINUE") {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "RESERVED_PUBLIC" &&
       this.tokenList[this.numPreAnalysis + 1].type == "RESERVED_STATIC"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "RESERVED_RETURN" &&
       this.tokenList[this.numPreAnalysis + 1].type == "SEMICOLON"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "RESERVED_RETURN" &&
       this.tokenList[this.numPreAnalysis + 1].type != "SEMICOLON"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "LEFT_PARENT"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "EQUALS_SIGN"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "RESERVED_INT" ||
@@ -553,7 +971,12 @@ class Parser {
       this.preAnalysis.type == "RESERVED_STRING" ||
       this.preAnalysis.type == "RESERVED_DOUBLE"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       (this.preAnalysis.type == "SEMICOLON" ||
@@ -567,32 +990,61 @@ class Parser {
       this.errorList.push(newError);
       this.numPreAnalysis++;
       this.preAnalysis = this.tokenList[this.numPreAnalysis];
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "INCREMENT_OPT"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     } else if (
       this.preAnalysis.type == "ID" &&
       this.tokenList[this.numPreAnalysis + 1].type == "DECRE_OPT"
     ) {
+      this.astString += "n" + this.nodeCont + '[label="INSTRUCCION"];\n';
+      this.astString += this.padreListaInstruccionesP + "->n" + this.nodeCont + ";\n";
+      this.padreInstruccion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Instruccion();
+      this.padreInstruccion = '';
       this.ListaInstruccionesP();
     }
   }
 
   ListaInstrLlaves() {
+    this.astString += "n" + this.nodeCont + '[label="{"];\n';
+    this.astString += this.padreListaInstruccionesLlaves + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_BRACE");
     this.contTab++;
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES"];\n';
+    this.astString += this.padreListaInstruccionesLlaves + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstrucciones = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrucciones();
+   //this.padreListaInstrucciones = ''; SE DEBE DE OMITIR (O NO?)
+
     if (this.doWhileFound == true) {
       this.doWhileContent += "\n";
     } else {
       this.stringTraduccion += "\n";
     }
+    if(this.padreListaInstruccionesLlaves != ''){
+      this.astString += "n" + this.nodeCont + '[label="}"];\n';
+      this.astString += this.padreListaInstruccionesLlaves + "->n" + this.nodeCont + ";\n";
+    }
+    this.nodeCont++;
     this.match("RIGHT_BRACE");
     this.contTab--;
   }
@@ -603,8 +1055,20 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " += 1";
     }
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreIncrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
+    this.astString += "n" + this.nodeCont + '[label="++"];\n';
+    this.astString += this.padreIncrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("INCREMENT_OPT");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreIncrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -614,8 +1078,21 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " -= 1";
     }
+
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreDecrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
+    this.astString += "n" + this.nodeCont + '[label="++"];\n';
+    this.astString += this.padreDecrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("DECREM_OPT");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreDecrementable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     thismatch("SEMICOLON");
   }
 
@@ -625,8 +1102,14 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value;
     }
+    this.astString += "n" + this.nodeCont + '[label="return"];\n';
+    this.astString += this.padreSentenciaReturnMetodos + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_RETURN");
     this.E(); // Podría omitirse
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaReturnMetodos + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -636,8 +1119,20 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " ";
     }
+    this.astString += "n" + this.nodeCont + '[label="return"];\n';
+    this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_RETURN");
+    this.astString += "n" + this.nodeCont + '[label="E"];\n';
+    this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+    this.padreE = 'n' + this.nodeCont
+    this.nodeCont++;
     this.E();
+    this.padreE = '';
+
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -647,8 +1142,19 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " ";
     }
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreAsignacionSimple + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
+    this.astString += "n" + this.nodeCont + '[label="ASIGNACION_SIMPLEP"];\n';
+    this.astString += this.padreAsignacionSimple + "->n" + this.nodeCont + ";\n";
+    this.padreAsignacionSimpleP = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.AsignacionSimpleP();
+    this.padreAsignacionSimpleP = '';
   }
 
   AsignacionSimpleP() {
@@ -657,13 +1163,24 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " ";
     }
+    this.astString += "n" + this.nodeCont + '[label="="];\n';
+    this.astString += this.padreAsignacionSimpleP + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("EQUALS_SIGN");
+    this.astString += "n" + this.nodeCont + '[label="E"];\n';
+    this.astString += this.padreAsignacionSimpleP + "->n" + this.nodeCont + ";\n";
+    this.padreE = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.E();
+    this.padreE = '';
     if (this.doWhileFound) {
       this.doWhileContent += "\n";
     } else {
       this.stringTraduccion += "\n";
     }
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreAsignacionSimpleP + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -675,8 +1192,16 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
+      this.astString += "n" + this.nodeCont + '[label="="];\n';
+      this.astString += this.padreAsignacion + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("EQUALS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="="];\n';
+      this.astString += this.padreAsignacion + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
       if (this.doWhileFound) {
         this.doWhileContent += "\n";
       } else {
@@ -688,19 +1213,46 @@ class Parser {
 
   DeclaracionVariable() {
     this.Comentario();
+    this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+    this.astString += this.padreDeclaracionVariable + "->n" + this.nodeCont + ";\n";
+    this.padreTipo = 'n' + this.nodeCont
+    this.nodeCont++;
     this.Tipo();
+    this.padreTipo = '';
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value + " ";
     } else {
       this.stringTraduccion += this.preAnalysis.value + " ";
     }
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreDeclaracionVariable + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
+    this.astString += "n" + this.nodeCont + '[label="DECLARACION_VARIABLEP"];\n';
+    this.astString += this.padreDeclaracionVariable + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionVariableP = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.DeclaracionVariableP();
+    this.padreDeclaracionVariableP = '';
   }
 
   DeclaracionVariableP() {
+    this.astString += "n" + this.nodeCont + '[label="LISTA_ID"];\n';
+    this.astString += this.padreDeclaracionVariableP + "->n" + this.nodeCont + ";\n";
+    this.padreListaID = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaID();
+    this.padreListaID = '';
+
+    this.astString += "n" + this.nodeCont + '[label="ASIGNACION"];\n';
+    this.astString += this.padreDeclaracionVariableP + "->n" + this.nodeCont + ";\n";
+    this.padreAsignacion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Asignacion();
+    this.padreAsignacion = '';
   }
 
   ListaID() {
@@ -710,12 +1262,21 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
+      this.astString += "n" + this.nodeCont + '[label=","];\n';
+      this.astString += this.padreListaID + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("COMMA");
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value + " ";
       } else {
         this.stringTraduccion += this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreListaID + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
       this.ListaID();
     }
@@ -728,29 +1289,76 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value;
     }
+    
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+    this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value;
     } else {
       this.stringTraduccion += this.preAnalysis.value;
     }
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="DECLARACION_PARAMETROS"];\n';
+    this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionParametros = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.DeclaracionParametros();
+    this.padreDeclaracionParametros = '';
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
   SentenciaMain() {
+    this.astString += "n" + this.nodeCont + '[label="void"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_VOID");
+    this.astString += "n" + this.nodeCont + '[label="main"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_MAIN");
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="String"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_STRING");
+    this.astString += "n" + this.nodeCont + '[label="["];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_BRACKET");
+    this.astString += "n" + this.nodeCont + '[label="]"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_BRACKET");
+    this.astString += "n" + this.nodeCont + '[label="args"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_ARGS");
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
     this.stringTraduccion += "def main():\n";
     this.auxMain = "\tif __name__ = “__main__”:\n \t\tmain()\n";
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+    this.astString += this.padreSentenciaMain + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrLlaves();
+    this.padreListaInstruccionesLlaves = '';
     this.stringTraduccion += this.auxMain;
     this.auxMain = "";
   }
@@ -760,7 +1368,13 @@ class Parser {
     if (this.doWhileFound) {
       this.doWhileContent += "continue";
     }
+    this.astString += "n" + this.nodeCont + '[label="continue"];\n';
+    this.astString += this.padreSentenciaContinue + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_CONTINUE");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaContinue + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -769,7 +1383,13 @@ class Parser {
     if (this.doWhileFound) {
       this.doWhileContent += "break";
     }
+    this.astString += "n" + this.nodeCont + '[label="break"];\n';
+    this.astString += this.padreSentenciaBreak + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_BREAK");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaBreak + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -796,9 +1416,21 @@ class Parser {
   }
 
   SentenciaPrint() {
+    this.astString += "n" + this.nodeCont + '[label="System"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_SYSTEM");
+    this.astString += "n" + this.nodeCont + '[label="."];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("DOT");
+    this.astString += "n" + this.nodeCont + '[label="out"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_OUT");
+    this.astString += "n" + this.nodeCont + '[label="."];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("DOT");
 
     if (this.doWhileFound) {
@@ -806,25 +1438,42 @@ class Parser {
     } else {
       this.stringTraduccion += "print";
     }
+    this.astString += "n" + this.nodeCont + '[label="println"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_PRINTLN");
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value;
     } else {
       this.stringTraduccion += this.preAnalysis.value;
     }
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
     /* if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value;
     } else {
       this.stringTraduccion += this.preAnalysis.value;
     } */
+    this.astString += "n" + this.nodeCont + '[label="E"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.padreE = 'n' + this.nodeCont
+    this.nodeCont++;
     this.E();
+    this.padreE = '';
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value + "\n";
     } else {
       this.stringTraduccion += this.preAnalysis.value + "\n";
     }
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
   }
 
@@ -834,16 +1483,35 @@ class Parser {
     } else {
       this.stringTraduccion += this.preAnalysis.value + " ";
     }
+    this.astString += "n" + this.nodeCont + '[label="while"];\n';
+    this.astString += this.padreSentenciaWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_WHILE");
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="EXPRESION"];\n';
+    this.astString += this.padreSentenciaWhile + "->n" + this.nodeCont + ";\n";
+    this.padreExpresion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Expresion();
+    this.padreExpresion = '';
     if (this.doWhileFound) {
       this.doWhileContent += ":\n";
     } else {
       this.stringTraduccion += ":\n";
     }
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+    this.astString += this.padreSentenciaWhile + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrLlaves();
+    this.padreListaInstruccionesLlaves = '';
   }
 
   SentenciaIf() {
@@ -854,23 +1522,57 @@ class Parser {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
     }
+    this.astString += "n" + this.nodeCont + '[label="if"];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_IF");
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="EXPRESION"];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.padreExpresion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Expresion();
+    this.padreExpresion = '';
     if (this.doWhileFound) {
       this.doWhileContent += ":\n";
     } else {
       this.stringTraduccion += ":\n";
     }
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrLlaves();
+    this.padreListaInstruccionesLlaves = '';
+
+
+    this.astString += "n" + this.nodeCont + '[label="OPCION_ELSE"];\n';
+    this.astString += this.padreSentenciaIf + "->n" + this.nodeCont + ";\n";
+    this.padreOpcionElse = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.OpcionElse();
+    this.padreOpcionElse = '';
   }
 
   OpcionElse() {
     if (this.preAnalysis.type == "RESERVED_ELSE") {
+      this.astString += "n" + this.nodeCont + '[label="else"];\n';
+      this.astString += this.padreOpcionElse + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_ELSE");
+      this.astString += "n" + this.nodeCont + '[label="LISTA_IF"];\n';
+      this.astString += this.padreOpcionElse + "->n" + this.nodeCont + ";\n";
+      this.padreListaIf = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaIf();
+      this.padreListaIf = '';
     }
   }
 
@@ -882,7 +1584,12 @@ class Parser {
       } else {
         this.stringTraduccion += "else:\n";
       }
+      this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+      this.astString += this.padreListaIf + "->n" + this.nodeCont + ";\n";
+      this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.ListaInstrLlaves();
+      this.padreListaInstruccionesLlaves = '';
     }
     if (this.preAnalysis.type == "RESERVED_IF") {
       this.tabular();
@@ -892,21 +1599,51 @@ class Parser {
         this.stringTraduccion += "elif ";
       }
       this.elifFound = true;
+      this.astString += "n" + this.nodeCont + '[label="SENTENCIA_IF"];\n';
+      this.astString += this.padreListaIf + "->n" + this.nodeCont + ";\n";
+      this.padreSentenciaIf = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.SentenciaIf();
+      this.padreSentenciaIf = '';
     }
   }
 
   SentenciaDoWhile() {
     this.doWhileFound = true;
+    this.astString += "n" + this.nodeCont + '[label="do"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_DO");
     this.whileOfDo = true;
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrLlaves();
+    this.padreListaInstruccionesLlaves = '';
     this.doWhileFound = false;
+    this.astString += "n" + this.nodeCont + '[label="while"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_WHILE");
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
     this.stringTraduccion += "while ";
+    this.astString += "n" + this.nodeCont + '[label="do"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.padreExpresion = 'n' + this.nodeCont; 
+    this.nodeCont++;
     this.Expresion();
+    this.padreExpresion = ''; 
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaDoWhile + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
     this.stringTraduccion += ":\n";
     this.stringTraduccion += this.doWhileContent;
@@ -921,29 +1658,70 @@ class Parser {
     } else {
       this.stringTraduccion += "for ";
     }
+    this.astString += "n" + this.nodeCont + '[label="for"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RESERVED_FOR");
+    this.astString += "n" + this.nodeCont + '[label="("];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("LEFT_PARENT");
+    this.astString += "n" + this.nodeCont + '[label="DECLARACION_FOR"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.padreDeclaracionFor = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.DeclaracionFor();
+    this.padreDeclaracionFor = '';
     if (this.doWhileFound) {
       this.doWhileContent += "in range(" + this.forValue1 + ",";
     } else {
       this.stringTraduccion += "in range(" + this.forValue1 + ",";
     }
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
+    this.astString += "n" + this.nodeCont + '[label="EXPRESION"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.padreExpresion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Expresion();
+    this.padreExpresion = '';
     if (this.doWhileFound) {
       this.doWhileContent += this.forValue2 + "):\n";
     } else {
       this.stringTraduccion += this.forValue2 + "):\n";
     }
+    this.astString += "n" + this.nodeCont + '[label=";"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("SEMICOLON");
+    this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.astString += "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+    this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("ID");
+    this.astString += "n" + this.nodeCont + '[label="INCREMENTO_DECREMENTO"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.padreIncrementoDecremento = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.IncrementoDecremento();
+    this.padreIncrementoDecremento = '';
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
     this.match("RIGHT_PARENT");
     this.forValue1 = "";
     this.forValue2 = "";
     this.forFound = false;
+    this.astString += "n" + this.nodeCont + '[label="LISTA_INSTRUCCIONES_LLAVES"];\n';
+    this.astString += this.padreSentenciaFor + "->n" + this.nodeCont + ";\n";
+    this.padreListaInstruccionesLlaves = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.ListaInstrLlaves();
+    this.padreListaInstruccionesLlaves = '';
   }
 
   DeclaracionFor() {
@@ -953,35 +1731,99 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+      this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
+      this.astString += "n" + this.nodeCont + '[label="="];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("EQUALS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     } else {
+      this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.padreTipo = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Tipo();
+      this.padreTipo = '';
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value + " ";
       } else {
         this.stringTraduccion += this.preAnalysis.value + " ";
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+      this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
+      this.astString += "n" + this.nodeCont + '[label="="];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("EQUALS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreDeclaracionFor + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     }
   }
 
   IncrementoDecremento() {
     if (this.preAnalysis.type == "INCREMENT_OPT") {
+      this.astString += "n" + this.nodeCont + '[label="++"];\n';
+      this.astString += this.padreIncrementoDecremento + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("INCREMENT_OPT");
     } else {
+      this.astString += "n" + this.nodeCont + '[label="--"];\n';
+      this.astString += this.padreIncrementoDecremento + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("DECREMENT_OPT");
     }
   }
 
   Expresion() {
+    this.astString += "n" + this.nodeCont + '[label="OPERADOR_NOT"];\n';
+    this.astString += this.padreExpresion + "->n" + this.nodeCont + ";\n";
+    this.padreOperadorNot = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.OperadorNot();
+    this.padreOperadorNot = '';
+
+    this.astString += "n" + this.nodeCont + '[label="E"];\n';
+    this.astString += this.padreExpresion + "->n" + this.nodeCont + ";\n";
+    this.padreE = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.E();
+    this.padreE = '';
+
+    this.astString += "n" + this.nodeCont + '[label="CONDICION"];\n';
+    this.astString += this.padreExpresion + "->n" + this.nodeCont + ";\n";
+    this.padreCondicion = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.Condicion();
+    this.padreCondicion = '';
+
+    this.astString += "n" + this.nodeCont + '[label="CONDICION_LOGICA"];\n';
+    this.astString += this.padreExpresion + "->n" + this.nodeCont + ";\n";
+    this.padreCondicionLogica = 'n' + this.nodeCont;
+    this.nodeCont++;
     this.CondicionLogica();
+    this.padreCondicionLogica = '';
+
+
   }
 
   OperadorNot() {
@@ -991,6 +1833,9 @@ class Parser {
       } else {
         this.stringTraduccion += "not ";
       }
+      this.astString += "n" + this.nodeCont + '[label="!"];\n';
+      this.astString += this.padreOperadorNot + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("NOT_OPT");
     }
   }
@@ -1002,8 +1847,17 @@ class Parser {
       } else {
         this.stringTraduccion += "and ";
       }
+      this.astString += "n" + this.nodeCont + '[label="&&"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("AND_OPT");
+      this.astString += "n" + this.nodeCont + '[label="EXPRSION"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.padreExpresion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Expresion();
+      this.padreExpresion = '';
+
     }
     if (this.preAnalysis.type == "OR_OPT") {
       if (this.doWhileFound) {
@@ -1011,8 +1865,16 @@ class Parser {
       } else {
         this.stringTraduccion += "or ";
       }
+      this.astString += "n" + this.nodeCont + '[label="||"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("OR_OPT");
+      this.astString += "n" + this.nodeCont + '[label="EXPRSION"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.padreExpresion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Expresion();
+      this.padreExpresion = '';
     }
     if (this.preAnalysis.type == "XOR_OPT") {
       if (this.doWhileFound) {
@@ -1020,8 +1882,16 @@ class Parser {
       } else {
         this.stringTraduccion += "xor ";
       }
+      this.astString += "n" + this.nodeCont + '[label="^"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("XOR_OPT");
+      this.astString += "n" + this.nodeCont + '[label="EXPRSION"];\n';
+      this.astString += this.padreCondicion + "->n" + this.nodeCont + ";\n";
+      this.padreExpresion = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.Expresion();
+      this.padreExpresion = '';
     }
   }
 
@@ -1034,8 +1904,17 @@ class Parser {
           this.stringTraduccion += ">= ";
         }
       }
+      this.astString += "n" + this.nodeCont + '[label=">="];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("GREATER_EQL");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
+
     } else if (this.preAnalysis.type == "LESS_EQL") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
@@ -1044,8 +1923,16 @@ class Parser {
           this.stringTraduccion += "<= ";
         }
       }
+      this.astString += "n" + this.nodeCont + '[label="<="];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("LESS_EQL");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     } else if (this.preAnalysis.type == "LESS_THAN") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
@@ -1054,9 +1941,16 @@ class Parser {
           this.stringTraduccion += "< ";
         }
       }
-
+      this.astString += "n" + this.nodeCont + '[label="<"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("LESS_THAN");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     } else if (this.preAnalysis.type == "GREATER_THAN") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
@@ -1065,9 +1959,16 @@ class Parser {
           this.stringTraduccion += "> ";
         }
       }
-
+      this.astString += "n" + this.nodeCont + '[label=">"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("GREATER_THAN");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     } else if (this.preAnalysis.type == "INEQUALITY") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
@@ -1076,9 +1977,16 @@ class Parser {
           this.stringTraduccion += "!= ";
         }
       }
-
+      this.astString += "n" + this.nodeCont + '[label="!="];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("INEQUALITY");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     } else if (this.preAnalysis.type == "EQUALS_SIGN") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
@@ -1087,14 +1995,33 @@ class Parser {
           this.stringTraduccion += "== ";
         }
       }
+      this.astString += "n" + this.nodeCont + '[label="=="];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("EQUALS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreCondicionLogica + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.padreE = '';
     }
   }
 
   E() {
+    this.astString += "n" + this.nodeCont + '[label="T"];\n';
+    this.astString += this.padreE + "->n" + this.nodeCont + ";\n";
+    this.padreT = 'n' + this.nodeCont
+    this.nodeCont++;
     this.T();
+    this.padreT = '';
+
+    this.astString += "n" + this.nodeCont + '[label="EP"];\n';
+    this.astString += this.padreE + "->n" + this.nodeCont + ";\n";
+    this.padreEP = 'n' + this.nodeCont
+    this.nodeCont++;
     this.EP();
+    this.padreEP = '';
   }
 
   EP() {
@@ -1104,8 +2031,16 @@ class Parser {
       } else {
         this.stringTraduccion += "+ ";
       }
+      this.astString += "n" + this.nodeCont + '[label="+"];\n';
+      this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("PLUS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="T"];\n';
+      this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
+      this.padreT = 'n' + this.nodeCont
+      this.nodeCont++;
       this.T();
+      this.padreT = '';
       this.EP();
     }
     if (this.preAnalysis.type == "SUBS_SIGN") {
@@ -1114,15 +2049,34 @@ class Parser {
       } else {
         this.stringTraduccion += "- ";
       }
+      this.astString += "n" + this.nodeCont + '[label="-"];\n';
+      this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("SUBS_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="T"];\n';
+      this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
+      this.padreT = 'n' + this.nodeCont
+      this.nodeCont++;
       this.T();
+      this.padreT = '';
       this.EP();
     }
   }
 
   T() {
+    this.astString += "n" + this.nodeCont + '[label="F"];\n';
+    this.astString += this.padreT + "->n" + this.nodeCont + ";\n";
+    this.padreF = 'n' + this.nodeCont
+    this.nodeCont++;
     this.F();
+    this.padreF = '';
+
+    this.astString += "n" + this.nodeCont + '[label="TP"];\n';
+    this.astString += this.padreT + "->n" + this.nodeCont + ";\n";
+    this.padreTP = 'n' + this.nodeCont
+    this.nodeCont++;
     this.TP();
+    this.padreTP = '';
   }
 
   TP() {
@@ -1132,8 +2086,17 @@ class Parser {
       } else {
         this.stringTraduccion += "* ";
       }
+      this.astString += "n" + this.nodeCont + '[label="*"];\n';
+      this.astString += this.padreTP + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("MULT_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="F"];\n';
+      this.astString += this.padreTP + "->n" + this.nodeCont + ";\n";
+      this.padreF = 'n' + this.nodeCont
+      this.nodeCont++;
       this.F();
+      this.padreF = '';
+
       this.TP();
     }
     if (this.preAnalysis.type == "DIV_SIGN") {
@@ -1142,8 +2105,16 @@ class Parser {
       } else {
         this.stringTraduccion += "/";
       }
+      this.astString += "n" + this.nodeCont + '[label="/"];\n';
+      this.astString += this.padreTP + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("DIV_SIGN");
+      this.astString += "n" + this.nodeCont + '[label="F"];\n';
+      this.astString += this.padreTP + "->n" + this.nodeCont + ";\n";
+      this.padreF = 'n' + this.nodeCont
+      this.nodeCont++;
       this.F();
+      this.padreF = '';
       this.TP();
     }
   }
@@ -1165,6 +2136,12 @@ class Parser {
       ) {
         this.forValue2 = this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="NUMERO"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+      this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("NUMBER");
     } else if (this.preAnalysis.type == "ID") {
       if (this.forFound != true) {
@@ -1182,6 +2159,12 @@ class Parser {
       ) {
         this.forValue2 = this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="ID"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label="' + this.preAnalysis.value + '"];\n';
+      this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("ID");
     } else if (this.preAnalysis.type == "DECIMAL") {
       if (this.doWhileFound) {
@@ -1194,6 +2177,9 @@ class Parser {
       } else {
         this.stringTraduccion += "True";
       }
+      this.astString += "n" + this.nodeCont + '[label="true"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_TRUE");
     } else if (this.preAnalysis.type == "RESERVED_FALSE") {
       if (this.doWhileFound) {
@@ -1201,10 +2187,23 @@ class Parser {
       } else {
         this.stringTraduccion += "False";
       }
+      this.astString += "n" + this.nodeCont + '[label="false"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RESERVED_FALSE");
     } else if (this.preAnalysis.type == "LEFT_PARENT") {
+      this.astString += "n" + this.nodeCont + '[label="("];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("LEFT_PARENT");
+      this.astString += "n" + this.nodeCont + '[label="E"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.padreE = 'n' + this.nodeCont;
+      this.nodeCont++;
       this.E();
+      this.astString += "n" + this.nodeCont + '[label=")"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("RIGHT_PARENT");
     } else if (this.preAnalysis.type == "STRING") {
       if (this.doWhileFound) {
@@ -1212,6 +2211,12 @@ class Parser {
       } else {
         this.stringTraduccion += this.preAnalysis.value;
       }
+      this.astString += "n" + this.nodeCont + '[label="STRING"];\n';
+      this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.astString += "n" + this.nodeCont + '[label=' + this.preAnalysis.value + '];\n';
+      this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
       this.match("STRING");
     }
   }
