@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const generateHTML = require('../reports/tokenList');
 const generateHTMLErrors = require('../reports/errorList');
+const fs = require("fs");
 
 const Scanner = require("../scanner/scanner");
 const Parser = require("../parser/parser2");
@@ -13,6 +14,11 @@ scanRouter.post("/", (req, res) => {
   generateHTMLErrors(newScanner.errorList);
   var newParser = new Parser(newScanner.tokenList);
   newParser.parse()
+  fs.writeFile('public/traduccion.py', newParser.stringTraduccion, (error) => {
+    if(error){
+      console.log(error)
+    } 
+  });
   /* console.log(newParser.stringTraduccion);
   console.log('---------------------------------------------------------------------------------');
   console.log('ERRORES', newParser.errorList); */
@@ -22,6 +28,10 @@ scanRouter.post("/", (req, res) => {
   res.json({
     errors: newParser.errorList,
   });
+});
+
+scanRouter.get('/downloadTranslation', (req, res) => {
+  res.download('public/traduccion.py', 'traduccion.py')
 });
 
 module.exports = scanRouter;
