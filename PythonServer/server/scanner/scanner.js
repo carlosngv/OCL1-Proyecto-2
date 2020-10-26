@@ -23,6 +23,7 @@ class Scanner {
       "static",
       "void",
       "int",
+      "print",
       "boolean",
       "double",
       "continue",

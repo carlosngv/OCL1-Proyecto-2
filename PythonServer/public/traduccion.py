@@ -14,6 +14,7 @@ class Prueba:
 
 		if a< 0 :
 			print("HOLA")
+			print("ADIOS")
 
 		elif r!= n:
 			a = 1 

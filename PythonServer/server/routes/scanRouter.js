@@ -34,4 +34,8 @@ scanRouter.get('/downloadTranslation', (req, res) => {
   res.download('public/traduccion.py', 'traduccion.py')
 });
 
+scanRouter.get('/downloadAST', (req, res) => {
+  res.download('public/ast.pdf', 'ast.pdf')
+});
+
 module.exports = scanRouter;

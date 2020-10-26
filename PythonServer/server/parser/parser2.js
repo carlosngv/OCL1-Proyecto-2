@@ -1438,10 +1438,18 @@ class Parser {
     } else {
       this.stringTraduccion += "print";
     }
-    this.astString += "n" + this.nodeCont + '[label="println"];\n';
+    /* this.astString += "n" + this.nodeCont + '[label="println"];\n';
     this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
-    this.match("RESERVED_PRINTLN");
+    this.match("RESERVED_PRINTLN"); */
+    // NUEVO
+    this.astString += "n" + this.nodeCont + '[label="OPCION_PRINT"];\n';
+    this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
+    this.padreOpcionPrint = 'n' + this.nodeCont;
+    this.nodeCont++;
+    this.OpcionPrint();
+    this.padreOpcionPrint = ''
+
     if (this.doWhileFound) {
       this.doWhileContent += this.preAnalysis.value;
     } else {
@@ -1475,6 +1483,20 @@ class Parser {
     this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
     this.match("SEMICOLON");
+  }
+
+  OpcionPrint() {
+    if(this.preAnalysis.type == "RESERVED_PRINTLN") {
+      this.astString += "n" + this.nodeCont + '[label="println"];\n';
+      this.astString += this.padreOpcionPrint + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match('RESERVED_PRINTLN');
+    } else if(this.preAnalysis.type == "RESERVED_PRINT") {
+      this.astString += "n" + this.nodeCont + '[label="print"];\n';
+      this.astString += this.padreOpcionPrint + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match('RESERVED_PRINT');
+    } 
   }
 
   SentenciaWhile() {
