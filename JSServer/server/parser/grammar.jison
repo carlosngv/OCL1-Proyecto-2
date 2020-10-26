@@ -13,7 +13,7 @@
 \"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'STRING'; }
 [0-9]+("."[0-9]+)?\b  	return 'DECIMAL';
 [0-9]+\b				return 'ENTERO';
-"//".*										
+"//".*					return 'STRING';		
 [/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]	 
 
 ":"     return 'DOS_PUNTOS';
@@ -57,7 +57,8 @@
 "double"  return 'RESERVADA_DOUBLE';
 "boolean"     return 'RESERVADA_BOOLEAN';
 "void" return 'RESERVADA_VOID';   
-"char" return 'RESERVADA_CHAR';           
+"char" return 'RESERVADA_CHAR';
+"null" return 'RESERVADA_NULL';           
 "String" return 'RESERVADA_STRING';           
 "if" return 'RESERVADA_IF';           
 "else" return 'RESERVADA_ELSE';           
@@ -82,6 +83,14 @@
 .                       { console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column); }
 /lex
 
+%{
+    const Node = require('./AST/node');
+    const Error = require('./AST/error');
+    var errorList = [];
+    var nodeList = [];
+    var traduction = "";
+%}
+
 %left 'RESERVADA_ELSE'
 %left 'OR'
 %left 'AND'
@@ -100,157 +109,612 @@
 %start inicio
 %%
 
-inicio: lista_clases  inicio {$$ = $1;}
+inicio: lista_clases EOF {
+    $$ = new Node('INIT', '');
+    $$.setChild($1);
+    $$.nodeList = nodeList;
+    $$.traduction = $1.traduction;
+    console.log($$.traduction);
+    return $$;
+}
       | lista_interfaces inicio { $$ = $1;}
-      | EOF {}
+      | EOF {  }
       ;
 
-lista_clases: lista_clases sentencia_clase { $$ = $1;}
-            | sentencia_clase { $$ = $1;}
+lista_clases: lista_clases sentencia_clase { 
+    $$ = new Node('LISTA_CLASES','');
+    $$.setChild($1);
+    $$.setChild($2);
+    $$.traduction = $1.traduction + ' ' + $2.traduction;
+}
+            | sentencia_clase { 
+                $$ = new Node('LISTA_CLASES','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction
+            }
             ;
 
-sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_funciones { $$ = $1;};
+sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_funciones { 
+    $$ = new Node('SENTENCIA_CLASE', ' ');
+    $$.setChild(new Node($1, 'PUBLIC'));
+    $$.setChild(new Node($2, 'CLASS'));
+    $$.setChild(new Node($3, 'ID'));
+    $$.setChild($4);
+    $$.traduction = $2 + ' ' + $3 + ' ' + $4.traduction; // class hola
+ };
 
-bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funciones LLAVEDER { $$ = $1;}
-                             | LLAVEIZQ LLAVEDER { $$ = $1;}
+bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funciones LLAVEDER { 
+    $$ = new Node('BLOQUE_DECLARACION_MF', ' ');
+    $$.setChild(new Node($1, 'LLAVEIZQ'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'LLAVEDER'));
+    $$.traduction = $1 + '\n' + $2.traduction + '\n' +$3 + '\n' // { instrucciones }
+}
+                             | LLAVEIZQ LLAVEDER { 
+                                 $$ = new Node('BLOQUE_DECLARACION_MF', ' ');
+                                 $$.setChild(new Node($1, 'LLAVEIZQ'));
+                                 $$.setChild(new Node($2, 'LLAVEDER'));
+                                 $$.traduction = $1 + $2;
+                             }
                              ;
 
-lista_declaracion_metodos_funciones: lista_declaracion_metodos_funciones declaracion_metodos_funciones { $$ = $1;}
-                                    | declaracion_metodos_funciones { $$ = $1;}
+lista_declaracion_metodos_funciones: lista_declaracion_metodos_funciones declaracion_metodos_funciones { 
+    $$ = new Node('LISTA_DECLARACION_MF', '');
+    $$.setChild($1);
+    $$.setChild($2);
+    $$.traduction = $1.traduction + ' ' + $2.traduction;
+}
+                                    | declaracion_metodos_funciones { 
+                                        $$ = new Node('LISTA_DECLARACION_MF', '');
+                                        $$.setChild($1);
+                                        $$.traduction = $1.traduction;
+                                    }
                                     ;
 
-declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_mf { $$ = $1;};
+declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_mf { 
+    $$ = new Node('DECLARACION_MF', '');
+    $$.setChild(new Node($1, 'PUBLIC'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'ID'));
+    $$.setChild(new Node($4, 'PARENTIZQ'));
+    $$.setChild($5);
+    $$.traduction = 'function ' + $3 + $4 + $5.traduction;
+};
 
-declaracion_parametros_mf: lista_parametros PARENTDER instrucciones_llaves { $$ = $1;}
-                         | PARENTDER instrucciones_llaves { $$ = $1;}
+declaracion_parametros_mf: lista_parametros PARENTDER instrucciones_llaves { 
+    $$ = new Node('DECLARACION_PARAMETROS_MF', '');
+    $$.setChild($1);
+    $$.setChild(new Node($3, 'PARENTDER'));
+    $$.setChild($3);
+    $$.traduction = $1.traduction + $2 + ' ' + $3.traduction;
+}
+                         | PARENTDER instrucciones_llaves { 
+                                $$ = new Node('DECLARACION_PARAMETROS_MF', '');
+                                $$.setChild(new Node($1, 'PARENTDER'));
+                                $$.setChild($2);
+                                $$.traduction = $1 + ' ' + $2.traduction;
+                         }
                          ;
 
-lista_interfaces: lista_interfaces sentencia_interfaz { $$ = $1;}
-                | sentencia_interfaz { $$ = $1;}
+lista_interfaces: lista_interfaces sentencia_interfaz { 
+    $$ = new Node('LISTA_INTERFACES', '');
+    $$.setChild($1);
+    $$.setChild($2);
+}
+                | sentencia_interfaz { 
+                    $$ = new Node('LISTA_INTERFACES', '');
+                    $$.setChild($1);
+                }
                 ; 
 
-sentencia_interfaz: RESERVADA_PUBLIC RESERVADA_INTERFACE ID bloque_declaracion_funcion { $$ = $1;};
+sentencia_interfaz: RESERVADA_PUBLIC RESERVADA_INTERFACE ID bloque_declaracion_funcion { 
+    $$ = new Node('SENTENCIA_INTERFAZ', '');
+    $$.setChild(new Node($1,'PUBLIC'));
+    $$.setChild(new Node($2,'INTERFACE'));
+    $$.setChild(new Node($3,'ID'));
+    $$.setChild(new Node($4));
+};
 
-bloque_declaracion_funcion: LLAVEIZQ lista_declaracion_funciones LLAVEDER { $$ = $1;}
-                     | LLAVEIZQ LLAVEDER { $$ = $1;}
+bloque_declaracion_funcion: LLAVEIZQ lista_declaracion_funciones LLAVEDER { 
+    $$ = new Node('BLOQUE_DECLARACION_FUNC', '');
+    $$.setChild(new Node($1,'LLAVEIZQ'));
+    $$.setChild($2);
+    $$.setChild(new Node($3,'LLAVEDER'));
+}
+                     | LLAVEIZQ LLAVEDER { 
+                        $$ = new Node('BLOQUE_DECLARACION_FUNC', '');
+                        $$.setChild(new Node($1,'LLAVEIZQ'));
+                        $$.setChild(new Node($3,'LLAVEDER'));
+                     }
                      ;
 
-lista_declaracion_funciones: lista_declaracion_funciones declaracion_funcion { $$ = $1;}
-                           | declaracion_funcion { $$ = $1;}
+lista_declaracion_funciones: lista_declaracion_funciones declaracion_funcion { 
+    $$ = new Node('LISTA_DECLARACION_FUNC', '');
+    $$.setChild($1);
+    $$.setChild($2);
+}
+                           | declaracion_funcion { 
+                                $$ = new Node('LISTA_DECLARACION_FUNC', '');
+                                $$.setChild($1);
+                           }
                            ;
 
-declaracion_funcion: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_funcion { $$ = $1;};
+declaracion_funcion: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_funcion { 
+    $$ = new Node('DECLARACION_FUNC', '');
+    $$.setChild(new Node($1,'PUBLIC'));
+    $$.setChild($2);
+    $$.setChild(new Node($3,'ID'));
+    $$.setChild(new Node($4,'PARENTIZQ'));
+    $$.setChild($5);
+};
 
-declaracion_parametros_funcion: lista_parametros PARENTDER PUNTO_COMA { $$ = $1;}
-                              | PARENTDER PUNTO_COMA  { $$ = $1;}
-                              ;
+declaracion_parametros_funcion: lista_parametros PARENTDER PUNTO_COMA { 
+    $$ = new Node('DECLARACION_PARAMETROS_FUNC', '');
+    $$.setChild($1);
+    $$.setChild(new Node($2,'PARENTDER'));
+    $$.setChild(new Node($3,'PUNTO_COMA'));
+}
+                              | PARENTDER PUNTO_COMA  { 
+                                $$ = new Node('DECLARACION_PARAMETROS_FUNC', '');
+                                $$.setChild(new Node($1,'PARENTDER'));
+                                $$.setChild(new Node($2,'PUNTO_COMA'));  
+                              };
 
-lista_parametros: lista_parametros COMA tipo ID { $$ = $1;}
-                | tipo ID { $$ = $1;};
+lista_parametros: lista_parametros COMA tipo ID { 
+    $$ = new Node('LISTA_PARAMETROS', '');
+    $$.setChild($1);
+    $$.setChild(new Node($2, 'COMA'));
+    $$.setChild($3);
+    $$.setChild(new Node($4, 'ID'));
+    $$.traduction = $1.traduction + $2 + $3.traduction + $4;
+    }
+                | tipo ID { 
+                    $$ = new Node('LISTA_PARAMETROS', '');
+                    $$.setChild($1);
+                    $$.setChild(new Node($2, 'ID'));
+                    $$.traduction = $1.traduction + $2;
+                };
 
 
-instruccion: asignacion_simple  { $$ = $1;}
-           | sentencia_break { $$ = $1;}
-           | sentencia_continue { $$ = $1;}
-           | sentencia_return_metodos { $$ = $1;}
-           | sentencia_for { $$ = $1;}
-           | sentencia_while { $$ = $1;}
-           | sentencia_do_while { $$ = $1;}
-           | sentencia_if { $$ = $1;} 
-           | sentencia_return_funciones { $$ = $1;}
-           | sentencia_print {}
-           | declaracion_variable {}
+instruccion: asignacion_simple  { 
+                        $$ = new Node('INSTRUCCION','');
+                        $$.setChild($1);
+                        $$.traduction = $1.traduction;
+                        }
+           | sentencia_break {  
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_continue { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_return_metodos { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_for { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_while { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_do_while { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_if { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           } 
+           | sentencia_return_funciones { 
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | sentencia_print {
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
+           | declaracion_variable {
+                $$ = new Node('INSTRUCCION','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+           }
            ;
            
 
-lista_instrucciones: lista_instrucciones instruccion { $$ = $1;}
-                   | instruccion { $$ = $1;}
+lista_instrucciones: lista_instrucciones instruccion { 
+    $$ = new Node('LISTA_INSTRUCCIONES','');
+    $$.setChild($1);
+    $$.setChild($2);
+    $$.traduction = $1.traduction + ' '+ $2.traduction;
+}
+                   | instruccion { 
+                        $$ = new Node('LISTA_INSTRUCCIONES','');
+                        $$.setChild($1);
+                        $$.traduction = $1.traduction;
+                   }
                    ;
 
 
-instrucciones_llaves: LLAVEIZQ lista_instrucciones LLAVEDER { $$ = $1;}
-                    | LLAVEIZQ LLAVEDER { $$ = $1;}
+instrucciones_llaves: LLAVEIZQ lista_instrucciones LLAVEDER { 
+    $$ = new Node('INSTR_LLAVES', '');
+    $$.setChild(new Node($1, 'LLAVEIZQ'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'LLAVEDER'));
+    $$.traduction = $1 + '\n' + $2.traduction  +'\n' + $3; // { instrucciones }
+
+}
+                    | LLAVEIZQ LLAVEDER { 
+                        $$ = new Node('INSTR_LLAVES', '');
+                        $$.setChild(new Node($1, 'LLAVEIZQ'));
+                        $$.setChild(new Node($2, 'LLAVEDER'));
+                        $$.traduction = $1 + $2 + '\n';  // {}
+                    }
                     ;
 
 
-tipo: RESERVADA_BOOLEAN { $$ = $1;}
-    | RESERVADA_INT { $$ = $1;}
-    | RESERVADA_CHAR { $$ = $1;}
-    | RESERVADA_DOUBLE { $$ = $1;}
-    | RESERVADA_STRING { $$ = $1;}
-    | RESERVADA_VOID { $$ = $1; }
+tipo: RESERVADA_BOOLEAN { $$ = new Node('TIPO',''); $$.setChild(new Node('boolean','RESERVADA')); $$.traduction = 'var ';}
+    | RESERVADA_INT { $$ = new Node('TIPO',''); $$.setChild(new Node('int','RESERVADA')); $$.traduction = 'var ';}
+    | RESERVADA_CHAR { $$ = new Node('TIPO',''); $$.setChild(new Node('char','RESERVADA')); $$.traduction = 'var ';}
+    | RESERVADA_DOUBLE { $$ = new Node('TIPO',''); $$.setChild(new Node('double','RESERVADA')); $$.traduction = 'var ';}
+    | RESERVADA_STRING { $$ = new Node('TIPO',''); $$.setChild(new Node('String','RESERVADA')); $$.traduction = 'var ';}
+    | RESERVADA_VOID { $$ = new Node('TIPO',''); $$.setChild(new Node('void','RESERVADA')); $$.traduction = '';}
     ;
 
-declaracion_variable: tipo lista_id  asignacion {};
+declaracion_variable: tipo lista_id  asignacion {
+    $$ = new Node('DECLARACION_VARIABLE', ''); 
+    $$.setChild($1);
+    $$.setChild($2);
+    $$.setChild($3);
+    $$.traduction = $1.traduction + $2.traduction + $3.traduction;
+};
 
-lista_id: lista_id COMA ID {}
-        | ID {};
+lista_id: lista_id COMA ID {
+    $$ = new Node('LISTA_ID', '');
+    $$.setChild('LISTA_ID');
+    $$.setChild(new Node($2,'COMMA'));
+    $$.setChild(new Node($3,'ID'));
+    $$.traduction = $1.traduction + ' ' + $2 + ' ' + $3;
+}
+        | ID {
+           $$ = new Node('LISTA_ID','');
+           $$.setChild($1, 'ID');
+           $$.traduction = $1 + ' ';  
+        };
 
-asignacion: ASIGNACION expresion PUNTO_COMA {}
-          | PUNTO_COMA {}; 
+asignacion: ASIGNACION expresion PUNTO_COMA {
+    $$ = new Node('ASIGNACION');
+    $$.setChild(new Node($1, 'ASIGNACION'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'PUNTO_COMA'));
+    $$.traduction = $1 + ' ' + $2.traduction + $3;
+}
+          | PUNTO_COMA {
+            $$ = new Node('ASIGNACION');
+            $$.setChild(new Node($1, 'PUNTO_COMA'));
+            $$.traduction = $1;
+          }; 
 
-sentencia_print: RESERVADA_SYSTEM PUNTO opcion_print PUNTO RESERVADA_OUT PARENTIZQ expresion PARENTDER {};
+sentencia_print: RESERVADA_SYSTEM PUNTO RESERVADA_OUT PUNTO opcion_print PARENTIZQ expresion PARENTDER PUNTO_COMA {
+    $$ = new Node('SENTENCIA_PRINT');
+    $$.setChild(new Node($1, 'SYSTEM'));
+    $$.setChild(new Node($2, 'PUNTO'));
+    $$.setChild(new Node($3, 'OUT'));
+    $$.setChild(new Node($4, 'PUNTO'));
+    $$.setChild($5);
+    $$.setChild(new Node($6, 'PARENTIZQ'));
+    $$.setChild($7);
+    $$.setChild(new Node($8, 'PARENTDER'));
+    $$.setChild(new Node($9, 'PUNTO_COMA'));
+    $$.traduction = 'console.log(' + $7.traduction + ')';
+};
 
-opcion_print: RESERVADA_PRINTLN {}
-            | RESERVADA_PRINT {};
+opcion_print: RESERVADA_PRINTLN {
+    $$ = new Node('OPCION_PRINTLN', '');
+    $$.setChild(new Node($1, 'PRINTLN'));
+    $$.traduction = "";
+}
+            | RESERVADA_PRINT {
+                $$ = new Node('OPCION_PRINT', '');
+                $$.setChild(new Node($1, 'PRINT'));
+                $$.traduction = "";
+            };
 
-sentencia_if: RESERVADA_IF condicion instrucciones_llaves 
-            | RESERVADA_IF condicion instrucciones_llaves RESERVADA_ELSE sentencia_if
-            | RESERVADA_IF condicion instrucciones_llaves RESERVADA_ELSE instrucciones_llaves;
+sentencia_if: RESERVADA_IF condicion instrucciones_llaves {
+    $$ = new Node('SENTENCIA_IF', '');
+    $$.setChild(new Node($1, 'IF'));
+    $$.setChild($2);
+    $$.setChild($3);
+    $$.traduction = '\n' + $1 + ' ' + $2.traduction + ' ' + $3.traduction;
+}
+            | RESERVADA_IF condicion instrucciones_llaves RESERVADA_ELSE sentencia_if {
+                $$ = new Node('SENTENCIA_IF', '');
+                $$.setChild(new Node($1, 'IF'));
+                $$.setChild($2);
+                $$.setChild($3);
+                $$.setChild(new Node($4, 'ELSE'));
+                $$.setChild($5);
+                $$.traduction = '\n' +$1 + ' ' + $2.traduction + ' ' + $3.traduction + ' ' + $4 + ' ' + $5.traduction;
+            }
+            | RESERVADA_IF condicion instrucciones_llaves RESERVADA_ELSE instrucciones_llaves {
+                $$ = new Node('SENTENCIA_IF', '');
+                $$.setChild(new Node($1, 'IF'));
+                $$.setChild($2);
+                $$.setChild($3);
+                $$.setChild(new Node($4, 'ELSE'));
+                $$.setChild($5);
+                $$.traduction = '\n' +$1 + ' '+ $2.traduction + ' ' + $3.traduction + ' ' + $4 + ' ' + $5.traduction;
+            };
 
 
-sentencia_while: RESERVADA_WHILE condicion instrucciones_llaves;
+sentencia_while: RESERVADA_WHILE condicion instrucciones_llaves {
+    $$ = new Node('SENTENCIA_WHILE','');
+    $$.setChild(new Node($1, 'WHILE'));
+    $$.setChild($2);
+    $$.setChild($3);
+    $$.traduction = '\n' + $1 + $2.traduction + ' ' + $3.traduction;
+} ;
 
-sentencia_do_while: RESERVADA_DO instrucciones_llaves RESERVADA_WHILE condicion PUNTO_COMA {};
+sentencia_do_while: RESERVADA_DO instrucciones_llaves RESERVADA_WHILE condicion PUNTO_COMA {
+    $$ = new Node('SENTENCIA_DO_WHILE', '');
+    $$.setChild(new Node($1, 'DO'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'WHILE'));
+    $$.setChild($4);
+    $$.setChild(new Node($5, 'PUNTO_COMA'));
+    $$.traduction =  '\n' +$1 + ' ' + $2.traduction + ' ' + $3  + $4.traduction + $5 + '\n';
+};
 
-sentencia_for: RESERVADA_FOR PARENTIZQ declaracion_for PUNTO_COMA expresion PUNTO_COMA incremento_decremento PARENTDER instrucciones_llaves {};
+sentencia_for: RESERVADA_FOR PARENTIZQ declaracion_for PUNTO_COMA expresion PUNTO_COMA incremento_decremento PARENTDER instrucciones_llaves {
+    $$ = new Node('SENTENCIA_FOR', '');
+    $$.setChild(new Node($1, 'FOR'));
+    $$.setChild(new Node($2, 'PARENTIZQ'));
+    $$.setChild($3);
+    $$.setChild(new Node($4, 'PUNTO_COMA'));
+    $$.setChild($5);
+    $$.setChild(new Node($6, 'PUNTO_COMA'));
+    $$.setChild($7);
+    $$.setChild(new Node($8, 'PARENTDER'));
+    $$.setChild($9);
+    $$.traduction = '\n' + $1 + $2 + $3.traduction + $4 + ' ' + $5.traduction + $6  + ' ' + $7.traduction + $8 + $9.traduction;
+};
 
-declaracion_for: tipo ID ASIGNACION expresion {}
-               | ID  ASIGNACION expresion {};
+declaracion_for: tipo ID ASIGNACION expresion {
+    $$ = new Node('DECLARACION_FOR');
+    $$.setChild($1);
+    $$.setChild($2, 'ID');
+    $$.setChild($3, 'ASIGNACION');
+    $$.setChild($4);
+    $$.traduction = $1.traduction + $2 + ' ' + $3 + ' ' + $4.traduction;
+}
+               | ID  ASIGNACION expresion {
+                    $$ = new Node('DECLARACION_FOR');
+                    $$.setChild($1, 'ID');
+                    $$.setChild($2, 'ASIGNACION');
+                    $$.setChild($3);
+                    $$.traduction = $1 + ' ' + $2 + ' ' + $3.traduction;
+               };
 
-incremento_decremento: ID INCR {}
-                     | ID DECR {};   
+incremento_decremento: ID INCR {
+    $$ = new Node('INCR_DECR');
+    $$.setChild($1, 'ID');
+    $$.setChild($2, 'INCR');
+    $$.traduction = $1 + $2;
+}
+                     | ID DECR {
+                            $$ = new Node('INCR_DECR');
+                            $$.setChild($1, 'ID');
+                            $$.setChild($2, 'DECR');
+                            $$.traduction = $1 + $2;
+                     };   
 
-sentencia_return_metodos: RESERVADA_RETURN PUNTO_COMA { $$ = $1;}
-                        ;
-sentencia_return_funciones: RESERVADA_RETURN expresion PUNTO_COMA { $$ = $1;};              
+sentencia_return_metodos: RESERVADA_RETURN PUNTO_COMA { 
+    $$ = new Node('SENTENCIA_RETURN_METODOS','');
+    $$.setChild(new Node($1, 'RETURN'));
+    $$.setChild(new Node($2, 'PUNTO_COMA'));
+    $$.traduction = '\n' + $1 + $2 + '\n';
+};
 
-sentencia_break: RESERVADA_BREAK PUNTO_COMA { $$ = $1;}
-                ;
+sentencia_return_funciones: RESERVADA_RETURN expresion PUNTO_COMA { 
+    $$ = new Node('SENTENCIA_RETURN_FUNCIONES','');
+    $$.setChild(new Node($1, 'RETURN'));
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'PUNTO_COMA'));
+    $$.traduction = '\n' + $1 + ' '+ $2.traduction +  $3 + '\n';
+};              
 
-sentencia_continue: RESERVADA_CONTINUE PUNTO_COMA { $$ = $1;}
-                  ;                    
+sentencia_break: RESERVADA_BREAK PUNTO_COMA { 
+    $$ = new Node('SENTENCIA_BREAK','');
+    $$.setChild(new Node($1, 'BREAK'));
+    $$.setChild(new Node($2, 'PUNTO_COMA'));
+    $$.traduction = '\n' + $1 + $2 + '\n';
+};
 
-asignacion_simple: ID ASIGNACION expresion PUNTO_COMA { $$ = $1;}
-                 ;
+sentencia_continue: RESERVADA_CONTINUE PUNTO_COMA { 
+    $$ = new Node('SENTENCIA_CONTINUE','');
+    $$.setChild(new Node($1, 'CONTINUE'));
+    $$.setChild(new Node($2, 'PUNTO_COMA'));
+    $$.traduction = '\n' + $1 + $2 + '\n';
+};                   
 
-condicion: PARENTIZQ expresion PARENTDER;
+asignacion_simple: ID ASIGNACION expresion PUNTO_COMA { 
+    $$ = new Node('ASIGNACION_SIMPLE','');
+    $$.setChild(new Node($1, 'ID'));
+    $$.setChild(new Node($2, 'ASIGNACION'));
+    $$.setChild($3);
+    $$.setChild(new Node($4, 'COMA'));
+    $$.traduction = $1 + ' ' + $2 + ' ' + $3.traduction + $4 + '\n';
+};
+                 
+
+condicion: PARENTIZQ expresion PARENTDER { 
+    $$ = new Node('CONDICION','');  
+    $$.setChild(new Node($1, 'PARENTIZQ'));  
+    $$.setChild($2);
+    $$.setChild(new Node($3, 'PARENTDER'));
+    $$.traduction = $1 + $2.traduction + $3;
+};
 
 
 
-expresion : MENOS expresion %prec UMENOS	{ $$ = $2;}    
-          | NEG expresion	            { $$ = $2;}   
-          | expresion  MAS expresion      { $$ = $1;}   
-          | expresion MENOS expresion       { $$ = $1;}    
-          | expresion MULT expresion  { $$ = $1;}
-          | expresion DIVISION expresion	    { $$ = $1;}
-          | expresion MAYOR_IGUAL expresion	    { $$ = $1;}
-          | expresion MENOR_IGUAL expresion      { $$ = $1;}     
-          | expresion MAYOR expresion	 { $$ = $1;}   
-          | expresion MENOR expresion	 { $$ = $1;}   
-          | expresion IGUALDAD expresion	  { $$ = $1;}  
-          | expresion DESIGUALDAD expresion	  { $$ = $1;}  
-          | expresion AND expresion	    { $$ = $1;}                     
-          | expresion OR expresion	  { $$ = $1;} 
-          | expresion XOR expresion	    { $$ = $1;}
-          | NUMBER     		    { $$ = ($1);}
-          | DECIMAL		          { $$ = ($1);}
-          | RESERVADA_TRUE				   { $$ = $1;} 
-          | RESERVADA_FALSE				{ $$ = $1;}    
-          | STRING			         { $$ = $1;}                   
-          | PARENTIZQ expresion PARENTDER { $$ = $2;}
-          | ID                  { $$ = $1;}
-          ;       
+expresion : MENOS expresion %prec UMENOS	{ 
+        $$ = new Node('EXPRESION',''); 
+        $$.setChild(new Node($1, 'MENOS'));
+        $$.setChild($1);
+        $$.traduction = '-' + $2.traduction;
+    }    
+          | NEG expresion	            { 
+                $$ = new Node('EXPRESION',''); 
+                $$.setChild(new Node($1, 'NEGACION'));
+                $$.setChild($1);
+                $$.traduction = '!' + $2.traduction;
+          }   
+          | expresion  MAS expresion      { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MAS'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' + ' + $3.traduction;
+          }   
+          | expresion MENOS expresion       { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MENOS'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' - ' + $3.traduction;
+
+          }    
+          | expresion MULT expresion  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MULT'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' * ' + $3.traduction;
+          }
+          | expresion DIVISION expresion	    { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'DIVISION'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' / ' + $3.traduction;
+          }
+          | expresion MAYOR_IGUAL expresion	    { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MAYOR_IGUAL'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' >= ' + $3.traduction;
+          }
+          | expresion MENOR_IGUAL expresion      { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MENOR_IGUAL'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' <= ' + $3.traduction;
+          }     
+          | expresion MAYOR expresion	 { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MAYOR'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' > ' + $3.traduction;
+          }   
+          | expresion MENOR expresion	 { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'MENOR'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' < ' + $3.traduction;
+          }   
+          | expresion IGUALDAD expresion	  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'IGUALDAD'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' == ' + $3.traduction;
+          }  
+          | expresion DESIGUALDAD expresion	  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'NO_IGUAL'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' != ' + $3.traduction;
+          }  
+          | expresion AND expresion	    { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'AND'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' && ' + $3.traduction;
+          }                     
+          | expresion OR expresion	  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'OR'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' || ' + $3.traduction;
+          } 
+          | expresion XOR expresion	    { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild($1);
+              $$.setChild(new Node($2, 'XOR'));
+              $$.setChild($3);
+              $$.traduction = $1.traduction + ' ^ ' + $3.traduction;
+          }
+          | ENTERO     		    { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'ENTERO'));
+              $$.traduction = $1
+          }
+          | DECIMAL		          { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'DECIMAL'));
+              $$.traduction = $1
+          }
+          | RESERVADA_TRUE				   { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'TRUE'));
+              $$.traduction = $1
+          } 
+          | RESERVADA_FALSE				{ 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'FALSE'));
+              $$.traduction = $1
+          }    
+          | STRING			         { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'STRING'));
+              $$.traduction = $1
+          }                   
+          | PARENTIZQ expresion PARENTDER { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'PARENTIZQ'));
+              $$.setChild($2);
+              $$.setChild(new Node($3, 'PARENTDER'));
+              $$.traduction = $1 + $2.traduction + $3;
+          }
+          | ID                  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'ID'));
+              $$.traduction = $1
+          }
+          | RESERVADA_NULL                  { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'NULL'));
+              $$.traduction = $1
+          };       
 
 
 
