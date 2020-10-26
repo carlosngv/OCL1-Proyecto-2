@@ -114,7 +114,8 @@ inicio: lista_clases EOF {
     $$.setChild($1);
     $$.nodeList = nodeList;
     $$.traduction = $1.traduction;
-    console.log($$.traduction);
+    traduction = $$.traduction;
+    console.log(traduction);
     return $$;
 }
       | lista_interfaces inicio { $$ = $1;}
@@ -141,7 +142,10 @@ sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_
     $$.setChild(new Node($3, 'ID'));
     $$.setChild($4);
     $$.traduction = $2 + ' ' + $3 + ' ' + $4.traduction; // class hola
- };
+ }
+                | error {
+                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                };
 
 bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funciones LLAVEDER { 
     $$ = new Node('BLOQUE_DECLARACION_MF', ' ');
@@ -155,6 +159,9 @@ bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funcion
                                  $$.setChild(new Node($1, 'LLAVEIZQ'));
                                  $$.setChild(new Node($2, 'LLAVEDER'));
                                  $$.traduction = $1 + $2;
+                             }
+                             | error {
+                                console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                              }
                              ;
 
@@ -179,7 +186,10 @@ declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_pa
     $$.setChild(new Node($4, 'PARENTIZQ'));
     $$.setChild($5);
     $$.traduction = 'function ' + $3 + $4 + $5.traduction;
-};
+}
+                            | error {
+                                console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                             };
 
 declaracion_parametros_mf: lista_parametros PARENTDER instrucciones_llaves { 
     $$ = new Node('DECLARACION_PARAMETROS_MF', '');
@@ -330,8 +340,7 @@ instruccion: asignacion_simple  {
                 $$ = new Node('INSTRUCCION','');
                 $$.setChild($1);
                 $$.traduction = $1.traduction;
-           }
-           ;
+           };
            
 
 lista_instrucciones: lista_instrucciones instruccion { 
@@ -345,6 +354,9 @@ lista_instrucciones: lista_instrucciones instruccion {
                         $$.setChild($1);
                         $$.traduction = $1.traduction;
                    }
+                   | error {
+                         console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                    }
                    ;
 
 
@@ -430,7 +442,10 @@ opcion_print: RESERVADA_PRINTLN {
                 $$ = new Node('OPCION_PRINT', '');
                 $$.setChild(new Node($1, 'PRINT'));
                 $$.traduction = "";
-            };
+            }
+            | error {
+                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                    };
 
 sentencia_if: RESERVADA_IF condicion instrucciones_llaves {
     $$ = new Node('SENTENCIA_IF', '');
