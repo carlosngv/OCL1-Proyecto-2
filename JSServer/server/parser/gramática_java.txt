@@ -1,0 +1,194 @@
+
+----------------------------------------------------------- CLASES E INTERFAZ -----------------------------------------------------------
+
+INICIO := 'public' SENTENCIA_CLASE LISTA_CLASES INICIO
+        | 'public' SENTENCIA_INTERFAZ LISTA_INTERFACES INICIO
+        | 'ultimo'
+
+SENTENCIA_CLASE :=  'class' id '{' LISTA_DECLARACION_METODOS_FUNCIONES '}'
+
+LISTA_CLASES := SENTENCIA_CLASE LISTA_CLASES
+              | EPSILON
+
+SENTENCIA_INTERFAZ := 'interface' id '{' LISTA_DECLARACION_FUNCIONES '}'  
+
+LISTA_INTERFACES := SENTENCIA_INTERFAZ LISTA_INTERFACES
+                  | EPSILON
+
+
+------------------------------------------------------- METODOS Y FUNCIONES ------------------------------------------------------------
+
+LISTA_DECLARACION_METODOS_FUNCIONES := DECLARACION_METODOS_FUNCIONES LISTA_DECLARACION_METODOS_FUNCIONESP
+                                     | EPSILON
+
+LISTA_DECLARACION_METODOS_FUNCIONESP := DECLARACION_METODOS_FUNCIONES LISTA_DECLARACION_METODOS_FUNCIONESP                      
+                                      | EPSILON
+
+
+LISTA_DECLARACION_FUNCIONES := DECLARACION_FUNCION LISTA_DECLARACION_FUNCIONESP
+                           | EPSILON
+
+LISTA_DECLARACION_FUNCIONESP := DECLARACION_FUNCION LISTA_DECLARACION_FUNCIONESP
+                            | EPSILON
+
+DECLARACION_METODOS_FUNCIONES := 'public' 'void' id '(' DECLARACION_PARAMETROS 
+                               | 'public' TIPO id '(' DECLARACION_PARAMETROS 
+
+DECLARACION_FUNCION := 'public' 'void' id '(' DECLARACION_PARAMETROS_INTERFAZ
+                     | 'public' TIPO id '(' DECLARACION_PARAMETROS_INTERFAZ
+
+
+DECLARACION_PARAMETROS_INTERFAZ := TIPO id LISTA_PARAMETROS ')' ';'
+                                 | ')' ';'
+   
+DECLARACION_PARAMETROS := TIPO id LISTA_PARAMETROS ')' LISTAINSTR_LLAVES
+                        | ')' LISTAINSTR_LLAVES
+                                
+LISTA_PARAMETROS =: ',' TIPO id LISTA_PARAMETROS
+                  | EPSILON  
+
+
+---------------------------------------------------------- TIPO ------------------------------------------------------------------------------------------ 
+
+TIPO := int 
+      | double
+      | char
+      | String
+      | boolean
+
+-------------------------------------------------------  INSTRUCCIONES ------------------------------------------------------------------------------------------ 
+
+INSTRUCCION  := DECLARACION_VARIABLE; 
+                | SENTENCIA_WHILE 
+                | SENTENCIA_IF_ELSE 
+                | SENTENCIA_FOR 
+                | SENTENCIA_DO_WHILE 
+                | SENTENCIA_PRINT 
+                | ASIGNACION_SIMPLE 
+                | SENTENCIA_CONTINUE 
+                | SENTENCIA_BREAK 
+                | SENTENCIA_RETURN_FUNCIONES 
+                | SENTENCIA_RETURN_METODOS 
+                | LLAMADA_METODO 
+                | SENTENCIA_MAIN 
+                | EPSILON 
+
+
+LISTA_INSTRUCCIONES := INSTRUCCION LISTA_INSTRUCCIONESP
+
+LISTA_INSTRUCCIONESP := INSTRUCCION LISTA_INSTRUCCIONESP
+                      | EPSILON
+
+DECLARACION_VARIABLE := TIPO id DECLARACION_VARIABLEP
+
+DECLARACION_VARIABLEP := LISTA_ID ASIGNACION ;
+
+LISTA_ID := ',' id LISTA_ID
+          | EPSILON
+
+LISTAINSTR_LLAVES := '{' LISTA_INSTRUCCIONES '}'
+
+-------------------------------------------------------  LLAMADA METODO ------------------------------------------------------------------------------------------ 
+
+LLAMADA_METODO := id '(' LISTA_PARAMETROS ')' ';'
+
+-------------------------------------------------------  ASIGNACIÓN ------------------------------------------------------------------------------------------ 
+
+ASIGNACION := '=' E ';'
+            | EPSILON
+
+ASIGNACION_SIMPLE := id ASIGNACION_SIMPLEP
+
+ASIGNACION_SIMPLEP := '=' E ';'
+
+LLAMADA_METODO := 
+
+------------------------------------------------------- SENTENCIA MAIN ------------------------------------------------------------------------------------------
+
+SENTENCIA_MAIN := 'public' 'static' 'void' 'main' '(' 'String' '[' ']' 'args' ')' LISTAINSTR_LLAVES
+
+------------------------------------------------------- SENTENCIA RETURN ------------------------------------------------------------------------------------------
+
+SENTENCIA_RETURN_FUNCIONES := 'return' E ';'
+                            
+SENTENCIA_RETURN_METODOS := 'return' ';'
+
+
+------------------------------------------------------- SENTENCIA CONTINUE ------------------------------------------------------------------------------------------
+
+SENTENCIA_CONTINUE := 'continue' ';'
+
+--------------------------------------------------------- SENTENCIA BREAK ------------------------------------------------------------------------------------------
+
+SENTENCIA_BREAK := 'break' ';'
+
+-------------------------------------------------------- SENTENCIA WHILE -------------------------------------------------------------------------------------------  
+
+SENTENCIA_WHILE := 'while' '(' EXPRESION ')' LISTAINSTR_LLAVES
+
+-------------------------------------------------------- SENTENCIA IF -------------------------------------------------------------------------------------------
+
+SENTENCIA_IF := 'if' '(' EXPRESION ')' LISTAINSTR_LLAVES OPCION_ELSE
+
+OPCION_ELSE := 'else' LISTA_IF 
+             | EPSILON 
+
+LISTA_IF := LISTAINSTR_LLAVES 
+          | SENTENCIA_IF
+
+--------------------------------------------------------- SENTENCIA FOR ------------------------------------------------------------------------------------------
+
+SENTENCIA_FOR := 'for' '(' DECLARACION_FOR ';' EXPRESION ';' id DECREMENT_INCREMENT ')' LISTAINSTR_LLAVES
+
+DECREMENT_INCREMENT := '++'
+                     | '--'
+
+DECLARACION_FOR := TIPO id '=' E 
+                 | id '=' E
+
+--------------------------------------------------------- SENTENCIA PRINT ------------------------------------------------------------------------------------------ 
+
+SENTENCIA_PRINT := 'System' '.' 'out' '.' OPCION_PRINT '(' E ')' ';'
+OPCION_PRINT := 'println'
+              | 'print'
+
+------------------------------------------------------------ CONDICIÓN ----------------------------------------------------------------------------------------------- 
+
+EXPRESION := OPERADOR_NOT E CONDICION CONDICION_LOGICA
+
+OPERADOR_NOT := '!'
+               | EPSILON
+
+CONDICION_LOGICA := '&&' EXPRESION
+                   | '||' EXPRESION
+                   | '^' EXPRESION
+                   | EPSILON
+
+
+CONDICION := '<=' E
+           | '>=' EP
+           | '>' E 
+           | '<' E
+           | '!=' E 
+
+------------------------------------------------------- EXPRESIÓN ------------------------------------------------------------------------------------------ 
+
+E := T EP
+
+EP := + T EP
+    | - T EP
+    | EPSILON
+
+T := F TP
+
+TP := * F TP
+    | / F TP
+    | EPSILON
+
+F := numero
+   | decimal
+   | true
+   | false
+   | id
+   | '(' E ')'
+   | string
