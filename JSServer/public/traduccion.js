@@ -1,19 +1,24 @@
 class acion {
 function retfornar() {
 
-while(x != FALSE) {
+while(x != "FALSE") {
 a = 1;
 
 } 
-if (adios != hola && a < 200) {
+if (!a) {
+
+return 1;
+
+} 
+if (adios != "hola" && a < 200) {
 
 do {
-console.log(jajajaja)
+console.log("jajajaja")
 } while(hola > 100);
 
 } 
-for(adas = 1; a < 1; a++){
-var aasds = 1;
+for(var a = 1; a < 1; a++){
+var a = 1;
 } 
 return 0;
 
