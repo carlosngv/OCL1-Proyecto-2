@@ -80,15 +80,17 @@
 
 <<EOF>>                 return 'EOF';
 
-.                       { console.error('Este es un error léxico: ' + yytext + ', en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column); }
+.                       { console.error('Este es un error léxico: ' + yytext + '  en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column);}
 /lex
 
 %{
     const Node = require('./AST/node');
     const Error = require('./AST/error');
+    const ScanError = require('./Error/scanError');
     var errorList = [];
+    var serrorList = [];
     var nodeList = [];
-    var traduction = "";
+    this.traduction = "";
 %}
 
 %left 'RESERVADA_ELSE'
@@ -114,8 +116,8 @@ inicio: lista_clases EOF {
     $$.setChild($1);
     $$.nodeList = nodeList;
     $$.traduction = $1.traduction;
-    traduction = $$.traduction;
-    console.log(traduction);
+    this.traduction = $$.traduction;
+    $$.errorList = errorList;
     return $$;
 }
       | lista_interfaces inicio { $$ = $1;}
@@ -144,13 +146,17 @@ sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_
     $$.traduction = $2 + ' ' + $3 + ' ' + $4.traduction; // class hola
  }
                 | error {
-                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     console.log("1. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                     errorList.push(newError);
                 };
 
 bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funciones LLAVEDER { 
     $$ = new Node('BLOQUE_DECLARACION_MF', ' ');
     $$.setChild(new Node($1, 'LLAVEIZQ'));
-    $$.setChild($2);
+    if($2.childList.length > 0) {
+        $$.setChild($2);
+    }
     $$.setChild(new Node($3, 'LLAVEDER'));
     $$.traduction = $1 + '\n' + $2.traduction + '\n' +$3 + '\n' // { instrucciones }
 }
@@ -161,7 +167,9 @@ bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funcion
                                  $$.traduction = $1 + $2;
                              }
                              | error {
-                                console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                                console.log("2. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                                newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                                errorList.push(newError);
                              }
                              ;
 
@@ -188,7 +196,9 @@ declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_pa
     $$.traduction = 'function ' + $3 + $4 + $5.traduction;
 }
                             | error {
-                                console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                                newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                                errorList.push(newError);
+                                console.log("3.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                              };
 
 declaracion_parametros_mf: lista_parametros PARENTDER instrucciones_llaves { 
@@ -355,7 +365,9 @@ lista_instrucciones: lista_instrucciones instruccion {
                         $$.traduction = $1.traduction;
                    }
                    | error {
-                         console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                        newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
+                        console.log("4.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                     }
                    ;
 
@@ -363,9 +375,13 @@ lista_instrucciones: lista_instrucciones instruccion {
 instrucciones_llaves: LLAVEIZQ lista_instrucciones LLAVEDER { 
     $$ = new Node('INSTR_LLAVES', '');
     $$.setChild(new Node($1, 'LLAVEIZQ'));
-    $$.setChild($2);
+    if($2.childList.length > 0) {
+        $$.setChild($2)
+    }
+    //$$.setChild($2);
     $$.setChild(new Node($3, 'LLAVEDER'));
     $$.traduction = $1 + '\n' + $2.traduction  +'\n' + $3; // { instrucciones }
+    
 
 }
                     | LLAVEIZQ LLAVEDER { 
@@ -373,6 +389,7 @@ instrucciones_llaves: LLAVEIZQ lista_instrucciones LLAVEDER {
                         $$.setChild(new Node($1, 'LLAVEIZQ'));
                         $$.setChild(new Node($2, 'LLAVEDER'));
                         $$.traduction = $1 + $2 + '\n';  // {}
+                        
                     }
                     ;
 
@@ -388,7 +405,9 @@ tipo: RESERVADA_BOOLEAN { $$ = new Node('TIPO',''); $$.setChild(new Node('boolea
 declaracion_variable: tipo lista_id  asignacion {
     $$ = new Node('DECLARACION_VARIABLE', ''); 
     $$.setChild($1);
-    $$.setChild($2);
+    if($2.childList.length > 0) {
+        $$.setChild($2);
+    }
     $$.setChild($3);
     $$.traduction = $1.traduction + $2.traduction + $3.traduction;
 };
@@ -402,12 +421,12 @@ lista_id: lista_id COMA ID {
 }
         | ID {
            $$ = new Node('LISTA_ID','');
-           $$.setChild($1, 'ID');
+           $$.setChild(new Node($1, 'ID'));
            $$.traduction = $1 + ' ';  
         };
 
 asignacion: ASIGNACION expresion PUNTO_COMA {
-    $$ = new Node('ASIGNACION');
+    $$ = new Node('ASIGNACION','');
     $$.setChild(new Node($1, 'ASIGNACION'));
     $$.setChild($2);
     $$.setChild(new Node($3, 'PUNTO_COMA'));
@@ -420,7 +439,7 @@ asignacion: ASIGNACION expresion PUNTO_COMA {
           }; 
 
 sentencia_print: RESERVADA_SYSTEM PUNTO RESERVADA_OUT PUNTO opcion_print PARENTIZQ expresion PARENTDER PUNTO_COMA {
-    $$ = new Node('SENTENCIA_PRINT');
+    $$ = new Node('SENTENCIA_PRINT','');
     $$.setChild(new Node($1, 'SYSTEM'));
     $$.setChild(new Node($2, 'PUNTO'));
     $$.setChild(new Node($3, 'OUT'));
@@ -444,14 +463,18 @@ opcion_print: RESERVADA_PRINTLN {
                 $$.traduction = "";
             }
             | error {
-                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     console.log("5.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
                     };
 
 sentencia_if: RESERVADA_IF condicion instrucciones_llaves {
     $$ = new Node('SENTENCIA_IF', '');
     $$.setChild(new Node($1, 'IF'));
     $$.setChild($2);
-    $$.setChild($3);
+    if($3.childList.length > 0) {
+        $$.setChild($3);
+    }
     $$.traduction = '\n' + $1 + ' ' + $2.traduction + ' ' + $3.traduction;
 }
             | RESERVADA_IF condicion instrucciones_llaves RESERVADA_ELSE sentencia_if {
@@ -478,14 +501,18 @@ sentencia_while: RESERVADA_WHILE condicion instrucciones_llaves {
     $$ = new Node('SENTENCIA_WHILE','');
     $$.setChild(new Node($1, 'WHILE'));
     $$.setChild($2);
-    $$.setChild($3);
+    if($3.childList.length > 0) {
+        $$.setChild($3);
+    }
     $$.traduction = '\n' + $1 + $2.traduction + ' ' + $3.traduction;
 } ;
 
 sentencia_do_while: RESERVADA_DO instrucciones_llaves RESERVADA_WHILE condicion PUNTO_COMA {
     $$ = new Node('SENTENCIA_DO_WHILE', '');
     $$.setChild(new Node($1, 'DO'));
-    $$.setChild($2);
+    if($2.childList.length > 0) {
+        $$.setChild($2);
+    }
     $$.setChild(new Node($3, 'WHILE'));
     $$.setChild($4);
     $$.setChild(new Node($5, 'PUNTO_COMA'));
@@ -502,36 +529,38 @@ sentencia_for: RESERVADA_FOR PARENTIZQ declaracion_for PUNTO_COMA expresion PUNT
     $$.setChild(new Node($6, 'PUNTO_COMA'));
     $$.setChild($7);
     $$.setChild(new Node($8, 'PARENTDER'));
-    $$.setChild($9);
+    if($9.childList.length > 0) {
+        $$.setChild($9);
+    }
     $$.traduction = '\n' + $1 + $2 + $3.traduction + $4 + ' ' + $5.traduction + $6  + ' ' + $7.traduction + $8 + $9.traduction;
 };
 
 declaracion_for: tipo ID ASIGNACION expresion {
-    $$ = new Node('DECLARACION_FOR');
+    $$ = new Node('DECLARACION_FOR','');
     $$.setChild($1);
-    $$.setChild($2, 'ID');
-    $$.setChild($3, 'ASIGNACION');
+    $$.setChild(new Node($2, 'ID'));
+    $$.setChild(new Node($3, 'ASIGNACION'));
     $$.setChild($4);
     $$.traduction = $1.traduction + $2 + ' ' + $3 + ' ' + $4.traduction;
 }
                | ID  ASIGNACION expresion {
-                    $$ = new Node('DECLARACION_FOR');
-                    $$.setChild($1, 'ID');
-                    $$.setChild($2, 'ASIGNACION');
+                    $$ = new Node('DECLARACION_FOR','');
+                    $$.setChild(new Node($1, 'ID'));
+                    $$.setChild(new Node($2, 'ASIGNACION'));
                     $$.setChild($3);
                     $$.traduction = $1 + ' ' + $2 + ' ' + $3.traduction;
                };
 
 incremento_decremento: ID INCR {
-    $$ = new Node('INCR_DECR');
-    $$.setChild($1, 'ID');
-    $$.setChild($2, 'INCR');
+    $$ = new Node('INCR_DECR','');
+    $$.setChild(new Node($1, 'ID'));
+    $$.setChild(new Node($2, 'INCR'));
     $$.traduction = $1 + $2;
 }
                      | ID DECR {
-                            $$ = new Node('INCR_DECR');
-                            $$.setChild($1, 'ID');
-                            $$.setChild($2, 'DECR');
+                            $$ = new Node('INCR_DECR','');
+                            $$.setChild(new Node($1, 'ID'));
+                            $$.setChild(new Node($2, 'DECR'));
                             $$.traduction = $1 + $2;
                      };   
 

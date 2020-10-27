@@ -5,6 +5,8 @@ class Node {
         this.childList = [];
         this.traduction = "";
         this.nodeList = [];
+        this.nodeNumber = 0;
+        this.errorList = [];
     }
 
     setChild(child) {

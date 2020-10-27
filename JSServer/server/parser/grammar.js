@@ -89,8 +89,8 @@ case 1:
     this.$.setChild($$[$0-1]);
     this.$.nodeList = nodeList;
     this.$.traduction = $$[$0-1].traduction;
-    traduction = this.$.traduction;
-    console.log(traduction);
+    this.traduction = this.$.traduction;
+    this.$.errorList = errorList;
     return this.$;
 
 break;
@@ -127,14 +127,18 @@ case 6:
 break;
 case 7:
 
-                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     console.log("1. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                     errorList.push(newError);
                 
 break;
 case 8:
  
     this.$ = new Node('BLOQUE_DECLARACION_MF', ' ');
     this.$.setChild(new Node($$[$0-2], 'LLAVEIZQ'));
-    this.$.setChild($$[$0-1]);
+    if($$[$0-1].childList.length > 0) {
+        this.$.setChild($$[$0-1]);
+    }
     this.$.setChild(new Node($$[$0], 'LLAVEDER'));
     this.$.traduction = $$[$0-2] + '\n' + $$[$0-1].traduction + '\n' +$$[$0] + '\n' // { instrucciones }
 
@@ -147,9 +151,11 @@ case 9:
                                  this.$.traduction = $$[$0-1] + $$[$0];
                              
 break;
-case 10: case 14:
+case 10:
 
-                                console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                                console.log("2. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                                newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                                errorList.push(newError);
                              
 break;
 case 11:
@@ -177,6 +183,13 @@ case 13:
     this.$.setChild($$[$0]);
     this.$.traduction = 'function ' + $$[$0-2] + $$[$0-1] + $$[$0].traduction;
 
+break;
+case 14:
+
+                                newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                                errorList.push(newError);
+                                console.log("3.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                             
 break;
 case 15:
  
@@ -333,16 +346,22 @@ case 41:
 break;
 case 42:
 
-                         console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                        newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
+                        console.log("4.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                     
 break;
 case 43:
  
     this.$ = new Node('INSTR_LLAVES', '');
     this.$.setChild(new Node($$[$0-2], 'LLAVEIZQ'));
-    this.$.setChild($$[$0-1]);
+    if($$[$0-1].childList.length > 0) {
+        this.$.setChild($$[$0-1])
+    }
+    //this.$.setChild($$[$0-1]);
     this.$.setChild(new Node($$[$0], 'LLAVEDER'));
     this.$.traduction = $$[$0-2] + '\n' + $$[$0-1].traduction  +'\n' + $$[$0]; // { instrucciones }
+    
 
 
 break;
@@ -352,6 +371,7 @@ case 44:
                         this.$.setChild(new Node($$[$0-1], 'LLAVEIZQ'));
                         this.$.setChild(new Node($$[$0], 'LLAVEDER'));
                         this.$.traduction = $$[$0-1] + $$[$0] + '\n';  // {}
+                        
                     
 break;
 case 45:
@@ -376,7 +396,9 @@ case 51:
 
     this.$ = new Node('DECLARACION_VARIABLE', ''); 
     this.$.setChild($$[$0-2]);
-    this.$.setChild($$[$0-1]);
+    if($$[$0-1].childList.length > 0) {
+        this.$.setChild($$[$0-1]);
+    }
     this.$.setChild($$[$0]);
     this.$.traduction = $$[$0-2].traduction + $$[$0-1].traduction + $$[$0].traduction;
 
@@ -393,13 +415,13 @@ break;
 case 53:
 
            this.$ = new Node('LISTA_ID','');
-           this.$.setChild($$[$0], 'ID');
+           this.$.setChild(new Node($$[$0], 'ID'));
            this.$.traduction = $$[$0] + ' ';  
         
 break;
 case 54:
 
-    this.$ = new Node('ASIGNACION');
+    this.$ = new Node('ASIGNACION','');
     this.$.setChild(new Node($$[$0-2], 'ASIGNACION'));
     this.$.setChild($$[$0-1]);
     this.$.setChild(new Node($$[$0], 'PUNTO_COMA'));
@@ -415,7 +437,7 @@ case 55:
 break;
 case 56:
 
-    this.$ = new Node('SENTENCIA_PRINT');
+    this.$ = new Node('SENTENCIA_PRINT','');
     this.$.setChild(new Node($$[$0-8], 'SYSTEM'));
     this.$.setChild(new Node($$[$0-7], 'PUNTO'));
     this.$.setChild(new Node($$[$0-6], 'OUT'));
@@ -444,7 +466,9 @@ case 58:
 break;
 case 59:
 
-                     console.log("Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     console.log("5.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                     newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
                     
 break;
 case 60:
@@ -452,7 +476,9 @@ case 60:
     this.$ = new Node('SENTENCIA_IF', '');
     this.$.setChild(new Node($$[$0-2], 'IF'));
     this.$.setChild($$[$0-1]);
-    this.$.setChild($$[$0]);
+    if($$[$0].childList.length > 0) {
+        this.$.setChild($$[$0]);
+    }
     this.$.traduction = '\n' + $$[$0-2] + ' ' + $$[$0-1].traduction + ' ' + $$[$0].traduction;
 
 break;
@@ -483,7 +509,9 @@ case 63:
     this.$ = new Node('SENTENCIA_WHILE','');
     this.$.setChild(new Node($$[$0-2], 'WHILE'));
     this.$.setChild($$[$0-1]);
-    this.$.setChild($$[$0]);
+    if($$[$0].childList.length > 0) {
+        this.$.setChild($$[$0]);
+    }
     this.$.traduction = '\n' + $$[$0-2] + $$[$0-1].traduction + ' ' + $$[$0].traduction;
 
 break;
@@ -491,7 +519,9 @@ case 64:
 
     this.$ = new Node('SENTENCIA_DO_WHILE', '');
     this.$.setChild(new Node($$[$0-4], 'DO'));
-    this.$.setChild($$[$0-3]);
+    if($$[$0-3].childList.length > 0) {
+        this.$.setChild($$[$0-3]);
+    }
     this.$.setChild(new Node($$[$0-2], 'WHILE'));
     this.$.setChild($$[$0-1]);
     this.$.setChild(new Node($$[$0], 'PUNTO_COMA'));
@@ -509,42 +539,44 @@ case 65:
     this.$.setChild(new Node($$[$0-3], 'PUNTO_COMA'));
     this.$.setChild($$[$0-2]);
     this.$.setChild(new Node($$[$0-1], 'PARENTDER'));
-    this.$.setChild($$[$0]);
+    if($$[$0].childList.length > 0) {
+        this.$.setChild($$[$0]);
+    }
     this.$.traduction = '\n' + $$[$0-8] + $$[$0-7] + $$[$0-6].traduction + $$[$0-5] + ' ' + $$[$0-4].traduction + $$[$0-3]  + ' ' + $$[$0-2].traduction + $$[$0-1] + $$[$0].traduction;
 
 break;
 case 66:
 
-    this.$ = new Node('DECLARACION_FOR');
+    this.$ = new Node('DECLARACION_FOR','');
     this.$.setChild($$[$0-3]);
-    this.$.setChild($$[$0-2], 'ID');
-    this.$.setChild($$[$0-1], 'ASIGNACION');
+    this.$.setChild(new Node($$[$0-2], 'ID'));
+    this.$.setChild(new Node($$[$0-1], 'ASIGNACION'));
     this.$.setChild($$[$0]);
     this.$.traduction = $$[$0-3].traduction + $$[$0-2] + ' ' + $$[$0-1] + ' ' + $$[$0].traduction;
 
 break;
 case 67:
 
-                    this.$ = new Node('DECLARACION_FOR');
-                    this.$.setChild($$[$0-2], 'ID');
-                    this.$.setChild($$[$0-1], 'ASIGNACION');
+                    this.$ = new Node('DECLARACION_FOR','');
+                    this.$.setChild(new Node($$[$0-2], 'ID'));
+                    this.$.setChild(new Node($$[$0-1], 'ASIGNACION'));
                     this.$.setChild($$[$0]);
                     this.$.traduction = $$[$0-2] + ' ' + $$[$0-1] + ' ' + $$[$0].traduction;
                
 break;
 case 68:
 
-    this.$ = new Node('INCR_DECR');
-    this.$.setChild($$[$0-1], 'ID');
-    this.$.setChild($$[$0], 'INCR');
+    this.$ = new Node('INCR_DECR','');
+    this.$.setChild(new Node($$[$0-1], 'ID'));
+    this.$.setChild(new Node($$[$0], 'INCR'));
     this.$.traduction = $$[$0-1] + $$[$0];
 
 break;
 case 69:
 
-                            this.$ = new Node('INCR_DECR');
-                            this.$.setChild($$[$0-1], 'ID');
-                            this.$.setChild($$[$0], 'DECR');
+                            this.$ = new Node('INCR_DECR','');
+                            this.$.setChild(new Node($$[$0-1], 'ID'));
+                            this.$.setChild(new Node($$[$0], 'DECR'));
                             this.$.traduction = $$[$0-1] + $$[$0];
                      
 break;
@@ -1046,9 +1078,11 @@ _handle_error:
 
     const Node = require('./AST/node');
     const Error = require('./AST/error');
+    const ScanError = require('./Error/scanError');
     var errorList = [];
+    var serrorList = [];
     var nodeList = [];
-    var traduction = "";
+    this.traduction = "";
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -1501,7 +1535,7 @@ case 60:return 10;
 break;
 case 61:return 5;
 break;
-case 62: console.error('Este es un error léxico: ' + yy_.yytext + ', en la linea: ' + yy_.yylloc.first_line + ', en la columna: ' + yy_.yylloc.first_column); 
+case 62: console.error('Este es un error léxico: ' + yy_.yytext + '  en la linea: ' + yy_.yylloc.first_line + ', en la columna: ' + yy_.yylloc.first_column);
 break;
 }
 },
