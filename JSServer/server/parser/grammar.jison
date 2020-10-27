@@ -105,7 +105,7 @@
 %left 'BRACKIZQ' 'BRACKDER'
 %left 'LLAVEIZQ' 'LLAVEDER'
 
-%right NEG
+%right 'NEG'
 %left UMENOS
 
 %start inicio
@@ -350,6 +350,11 @@ instruccion: asignacion_simple  {
                 $$ = new Node('INSTRUCCION','');
                 $$.setChild($1);
                 $$.traduction = $1.traduction;
+           }
+           | incremento_decremento { 
+               $$ = new Node('INSTRUCCION','');
+               $$.setChild($1);
+               $$.traduction = $1.traduction;
            };
            
 
@@ -562,7 +567,23 @@ incremento_decremento: ID INCR {
                             $$.setChild(new Node($1, 'ID'));
                             $$.setChild(new Node($2, 'DECR'));
                             $$.traduction = $1 + $2;
-                     };   
+                     }
+                     
+                     | ID DECR PUNTO_COMA {
+                            $$ = new Node('INCR_DECR','');
+                            $$.setChild(new Node($1, 'ID'));
+                            $$.setChild(new Node($2, 'DECR'));
+                            $$.setChild(new Node($3, 'PUNTO_COMA'));
+                            $$.traduction = '\n' + $1 + $2 + $3;
+                     }
+                     | ID INCR PUNTO_COMA {
+                            $$ = new Node('INCR_DECR','');
+                            $$.setChild(new Node($1, 'ID'));
+                            $$.setChild(new Node($2, 'INCR'));
+                            $$.setChild(new Node($3, 'PUNTO_COMA'));
+                            $$.traduction = '\n' + $1 + $2 + $3;
+                     }
+                     ;   
 
 sentencia_return_metodos: RESERVADA_RETURN PUNTO_COMA { 
     $$ = new Node('SENTENCIA_RETURN_METODOS','');
@@ -622,7 +643,7 @@ expresion : MENOS expresion %prec UMENOS	{
           | NEG expresion	            { 
                 $$ = new Node('EXPRESION',''); 
                 $$.setChild(new Node($1, 'NEGACION'));
-                $$.setChild($1);
+                $$.setChild($2);
                 $$.traduction = '!' + $2.traduction;
           }   
           | expresion  MAS expresion      { 

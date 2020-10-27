@@ -4,6 +4,7 @@ class Tree {
         this.auxString = "digraph G{\n ";
     }
     graph(node) {
+console.log(node);
         if(node.nodeNumber == 0) {
             node.nodeNumber = this.auxNumber;
             this.auxNumber++;
@@ -18,7 +19,6 @@ class Tree {
     }
 
     trasverse(node) {
-        console.log(node);
         node.childList.forEach(child => {
             this.trasverse(child);
         });
