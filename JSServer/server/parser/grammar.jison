@@ -112,7 +112,7 @@
 %%
 
 inicio: lista_clases EOF {
-    $$ = new Node('INIT', '');
+    $$ = new Node('INICIO', '');
     $$.setChild($1);
     $$.nodeList = nodeList;
     $$.traduction = $1.traduction;
@@ -120,7 +120,15 @@ inicio: lista_clases EOF {
     $$.errorList = errorList;
     return $$;
 }
-      | lista_interfaces inicio { $$ = $1;}
+      | lista_interfaces inicio { 
+            $$ = new Node('INICIO', '');
+            $$.setChild($1);
+            $$.nodeList = nodeList;
+            $$.traduction = $1.traduction;
+            this.traduction = $$.traduction;
+            $$.errorList = errorList;
+            return $$;
+      }
       | EOF {  }
       ;
 
@@ -761,7 +769,7 @@ expresion : MENOS expresion %prec UMENOS	{
           | STRING			         { 
               $$ = new Node('EXPRESION','');
               $$.setChild(new Node($1, 'STRING'));
-              $$.traduction = $1
+              $$.traduction = '"'+ $1 +'"';
           }                   
           | PARENTIZQ expresion PARENTDER { 
               $$ = new Node('EXPRESION','');

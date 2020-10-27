@@ -85,7 +85,7 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
 
-    this.$ = new Node('INIT', '');
+    this.$ = new Node('INICIO', '');
     this.$.setChild($$[$0-1]);
     this.$.nodeList = nodeList;
     this.$.traduction = $$[$0-1].traduction;
@@ -95,7 +95,15 @@ case 1:
 
 break;
 case 2:
- this.$ = $$[$0-1];
+ 
+            this.$ = new Node('INICIO', '');
+            this.$.setChild($$[$0-1]);
+            this.$.nodeList = nodeList;
+            this.$.traduction = $$[$0-1].traduction;
+            this.traduction = this.$.traduction;
+            this.$.errorList = errorList;
+            return this.$;
+      
 break;
 case 3:
   
@@ -823,7 +831,7 @@ case 98:
  
               this.$ = new Node('EXPRESION','');
               this.$.setChild(new Node($$[$0], 'STRING'));
-              this.$.traduction = $$[$0]
+              this.$.traduction = '"'+ $$[$0] +'"';
           
 break;
 case 99:
