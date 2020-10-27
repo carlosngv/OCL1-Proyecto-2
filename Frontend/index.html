@@ -34,7 +34,7 @@
                         <span class="icon">
                             <i class="far fa-list-alt"></i>
                         </span>
-                        Options
+                        Archivo
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <div class="dropdown-item" id="open" href="#">
@@ -42,7 +42,7 @@
                                 <span>
                                     <i class="far fa-folder-open"></i>
                                 </span>
-                                Open
+                                Abrir
                                 <input id="myFile" type="file" />
                             </label>
 
@@ -51,19 +51,19 @@
                             <span class="icon">
                                 <i class="far fa-plus-square"></i>
                             </span>
-                            New
+                            Nuevo
                         </a>
                         <a class="dropdown-item" href="#">
                             <span class="icon">
                                 <i class="far fa-save"></i>
                             </span>
-                            Save
+                            Guardar
                         </a>
                         <a class="dropdown-item" href="#">
                             <span class="icon">
                                 <i class="far fa-save"></i>
                             </span>
-                            Save as
+                            Guardar como
                         </a>
                     </div>
                 </li>
@@ -73,7 +73,7 @@
                         <span class="icon">
                             <i class="fas fa-file-download"></i>
                         </span>
-                        Download
+                        Archivos traducidos
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <a class="dropdown-item" href="#">
@@ -82,17 +82,40 @@
                             </span>
                             Both
                         </a>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="http://localhost:3200/parse/downloadTranslation">
                             <span class="icon">
                                 <i class="fab fa-js"></i>
                             </span>
                             JavaScript
                         </a>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="http://localhost:3000/scan/downloadTranslation" id="download-python">
                             <span class="icon">
                                 <i class="fab fa-python"></i>
                             </span>
                             Python
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="icon">
+                            <i class="fas fa-tree"></i>
+                        </span>
+                        AST
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="http://localhost:3000/scan/downloadAST" id="download-python">
+                            <span class="icon">
+                                <i class="fab fa-python"></i>
+                            </span>
+                            AST Python
+                        </a>
+                        <a class="dropdown-item" href="http://localhost:3200/parse/downloadAST">
+                            <span class="icon">
+                                <i class="fab fa-js"></i>
+                            </span>
+                            AST JavaScript
                         </a>
                     </div>
                 </li>
@@ -129,7 +152,8 @@
                         </div>
                     </div>
                 </div>
-                <button type="button" id="scan" class="btn-analyze btn btn-large btn-primary">Analizar</button>
+                <button type="button" id="scan" class="btn-analyze btn btn-primary">Analiza Python</button>
+                <button type="button" id="scanJS" class="btn-analyze btn btn-primary">Analiza JavaScript</button>
             </div>
 
             <div class="col-sm-6">
@@ -189,6 +213,36 @@
         const editor = CodeMirror.fromTextArea(document.getElementById("editor"), config);
         editor.setSize("470", "600");
 
+
+        const scanButtonJS = document.getElementById('scanJS')
+        scanButtonJS.addEventListener("click", async () => {
+            let url = 'http://localhost:3200/parse';
+            let data = editor.getValue()
+            var errorsAux2 = '';
+            let data2 = {
+                input: data,
+            }
+            await fetch(url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data2)
+            }).then(res => {
+                res.clone().json()
+                    .then((data) =>{
+                        console.log(data['errors']);
+                        data['errors'].forEach(async error => {
+                        errorsAux2 += '>> Error sintáctico con [' + error['description'] +  '] en la fila: '+ error['row'] + ' y columna: '+ error['column']  + '.\n'; 
+                        });
+                        editorJS.getDoc().setValue(errorsAux2);
+                    });
+            });
+        });
+
+
+
+
         const scanButton = document.getElementById('scan')
         scanButton.addEventListener("click", async () => {
             let url = 'http://localhost:3000/scan';
@@ -215,6 +269,16 @@
                     });
             })
             editorPython.getDoc().setValue(errorsAux);
+        })
+
+        const downloadPython = document.getElementById('download-python');
+        downloadPython.addEventListener("click", async () => {
+            let url = 'http://localhost:3000/scan/downloadTranslation';
+            await fetch(url, {
+                method: "GET"
+            }).then(res => {
+                console.log(res);
+            });
         })
 
     </script>
