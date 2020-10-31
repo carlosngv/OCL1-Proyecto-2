@@ -143,6 +143,11 @@ lista_clases: lista_clases sentencia_clase {
                 $$.setChild($1);
                 $$.traduction = $1.traduction
             }
+            | error {
+                        newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
+                        console.log("4.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                    }
             ;
 
 sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_funciones { 
@@ -192,6 +197,11 @@ lista_declaracion_metodos_funciones: lista_declaracion_metodos_funciones declara
                                         $$.setChild($1);
                                         $$.traduction = $1.traduction;
                                     }
+                                    | error {
+                        newError = new Error(yytext, this._$.first_line, this._$.first_column);
+                        errorList.push(newError);
+                        console.log("4.Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
+                    }
                                     ;
 
 declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_mf { 
