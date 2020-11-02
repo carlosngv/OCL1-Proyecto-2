@@ -1,10 +1,8 @@
-const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const app = express();
 const parserRouter = require('./routes/parserRoute');
-const parser = require('./parser/grammar');
 
 app.use(express.json());
 app.use(cors());

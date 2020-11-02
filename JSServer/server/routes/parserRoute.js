@@ -5,28 +5,32 @@ const parserRouter = Router();
 const generateHTMLErrors = require("../reports/errorList");
 const Tree = require("../parser/AST/graphAST");
 const { exec } = require("child_process");
-var beautify = require('js-beautify').js;
+var beautify = require("js-beautify").js;
+const { graphviz } = require("node-graphviz");
 
-parserRouter.post("/", (req, res) => {
+parserRouter.post("/", async (req, res) => {
   let newTree = new Tree();
   let { input } = req.body;
   let errorList = parser.parse(input.toString()).errorList;
   let traduction = parser.parse(input.toString()).traduction;
-  var traductionFormatted = beautify(traduction, 
-    {
-    indent_size: 4, 
+  var traductionFormatted = beautify(traduction, {
+    indent_size: 4,
     space_in_empty_paren: true,
     space_after_anon_function: true,
-    brace_style: "collapse"
+    brace_style: "collapse",
   });
-  traduction = traductionFormatted
-  console.log('TRADUCCIÓN:\n ', traduction);
+  traduction = traductionFormatted;
+  console.log("TRADUCCIÓN:\n ", traduction);
   let root = parser.parse(input.toString());
-  console.log('NUM. ERRORES:',errorList.length)
-  if(errorList.length <= 0) {
+  console.log("NUM. ERRORES:", errorList.length);
+  if (errorList.length <= 0) {
     let dot = newTree.graph(root);
     dot += "\n}";
-    generateAST(dot);
+    await graphviz.dot(dot, "svg").then((svg) => {
+      // Write the SVG to file
+      fs.writeFileSync("public/ast.svg", svg);
+    });
+    await generateAST(dot);
   }
 
   generateHTMLErrors(errorList);
@@ -43,13 +47,13 @@ parserRouter.post("/", (req, res) => {
   });
 });
 
-function generateAST(dot) {
+ function generateAST(dot) {
   fs.writeFile("ast.dot", dot, (error) => {
     if (error) {
       console.log(error);
     }
   });
-  exec("dot -Tpdf ast.dot -o public/ast.pdf", (error, stdout, stderr) => {
+   exec("dot -Tsvg ast.dot -o public/ast.svg", (error, stdout, stderr) => {
     if (error) {
       console.log(`error: ${error.message}`);
       return;
@@ -67,7 +71,7 @@ parserRouter.get("/downloadTranslation", (req, res) => {
 });
 
 parserRouter.get("/downloadAST", (req, res) => {
-  res.download("public/ast.pdf", "ast.pdf");
+  res.download("public/ast.svg", "ast.svg");
 });
 
 module.exports = parserRouter;

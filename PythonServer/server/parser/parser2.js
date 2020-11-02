@@ -136,6 +136,10 @@ class Parser {
           console.log(error)
         } 
       });
+      graphviz.dot(this.astString, 'svg').then((svg) => {
+        // Write the SVG to file
+        fs.writeFileSync('public/ast.svg', svg);
+      });
       exec("dot -Tpdf ast.dot -o public/ast.pdf", (error, data, getter) => {
         if(error){
           console.log("error",error.message);

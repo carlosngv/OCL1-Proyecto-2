@@ -17,6 +17,8 @@ services:
             - "3000:3000"
         volumes:
             - ./PythonServer:/usr/src/app/PythonServer
+        links: 
+            - graphviz
     js-server:
         container_name: jsserver
         build: ./JSServer
@@ -24,3 +26,10 @@ services:
             - "3200:3200"
         volumes:
             - ./JSServer:/usr/src/app/JSServer
+        links: 
+            - graphviz
+    graphviz:
+        container_name: graphviz
+        image: pipalacademy/graphviz-web
+        ports:
+            - "3300:3300"
