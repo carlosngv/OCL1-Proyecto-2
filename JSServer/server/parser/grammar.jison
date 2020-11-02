@@ -76,6 +76,7 @@
 "println" return 'RESERVADA_PRINTLN'; 
 "print" return 'RESERVADA_PRINT';          
 "return" return 'RESERVADA_RETURN';  
+"args" return 'RESERVADA_ARGS';
 ([a-zA-Z])[a-zA-Z0-9_]*	return 'ID';
 
 <<EOF>>                 return 'EOF';
@@ -171,7 +172,7 @@ bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funcion
         $$.setChild($2);
     }
     $$.setChild(new Node($3, 'LLAVEDER'));
-    $$.traduction = $1 + '\n' + $2.traduction + '\n' +$3 + '\n' // { instrucciones }
+    $$.traduction = $1 + '\n' + 'constructor(){}\n' + $2.traduction + '\n' +$3 + '\n' // { instrucciones }
 }
                              | LLAVEIZQ LLAVEDER { 
                                  $$ = new Node('BLOQUE_DECLARACION_MF', ' ');
@@ -212,7 +213,22 @@ declaracion_metodos_funciones: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_pa
     $$.setChild(new Node($4, 'PARENTIZQ'));
     $$.setChild($5);
     $$.traduction = 'function ' + $3 + $4 + $5.traduction;
-}
+} 
+                            | RESERVADA_PUBLIC RESERVADA_STATIC RESERVADA_VOID RESERVADA_MAIN PARENTIZQ RESERVADA_STRING BRACKIZQ BRACKDER RESERVADA_ARGS PARENTDER instrucciones_llaves {
+                                $$ = new Node('SENTENCIA_MAIN','');
+                                $$.setChild(new Node($1, 'PUBLIC'));
+                                $$.setChild(new Node($2, 'STATIC'));
+                                $$.setChild(new Node($3, 'VOID'));
+                                $$.setChild(new Node($4, 'MAIN'));
+                                $$.setChild(new Node($5, 'PARENTIZQ'));
+                                $$.setChild(new Node($6, 'STRING'));
+                                $$.setChild(new Node($7, 'BRACKIZQ'));
+                                $$.setChild(new Node($8, 'BRACKDER'));
+                                $$.setChild(new Node($9, 'ARGS'));
+                                $$.setChild(new Node($10, 'PARENTDER'));
+                                $$.setChild($11);
+                                $$.traduction = 'function main()' + $11.traduction;
+                            }
                             | error {
                                 newError = new Error(yytext, this._$.first_line, this._$.first_column);
                                 errorList.push(newError);
@@ -424,6 +440,7 @@ tipo: RESERVADA_BOOLEAN { $$ = new Node('TIPO',''); $$.setChild(new Node('boolea
     | RESERVADA_STRING { $$ = new Node('TIPO',''); $$.setChild(new Node('String','RESERVADA')); $$.traduction = 'var ';}
     | RESERVADA_VOID { $$ = new Node('TIPO',''); $$.setChild(new Node('void','RESERVADA')); $$.traduction = '';}
     ;
+
 
 declaracion_variable: tipo lista_id  asignacion {
     $$ = new Node('DECLARACION_VARIABLE', ''); 

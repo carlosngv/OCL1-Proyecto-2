@@ -152,7 +152,11 @@ SENTENCIA_PRINT := 'System' '.' 'out' '.' 'println' '(' E ')' ';'
 
 ---------------------------- CONDICIÓN ----------------------------------- PENDIENTE
 
-EXPRESION := OPERADOR_NOT E CONDICION CONDICION_LOGICA
+LISTA_EXPRESIONES := EXPRESION LISTA_EXPRESIONES
+                    | EPSILON
+
+EXPRESION := OPERADOR_NOT E CONDICION CONDICION_LOGICA LISTA_EXPRESIONES
+
 
 OPERADOR_NOT := '!'
                | EPSILON

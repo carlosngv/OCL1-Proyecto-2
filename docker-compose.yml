@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+    Frontend:
+        container_name: frontend
+        image: goweb:v1
+        restart: always
+        build: ./Frontend 
+        ports:
+            - "3100:3100"
+        volumes:
+            - ./Frontend:/usr/src/app/Frontend
+    python-server:
+        container_name: pythonserver
+        build: ./PythonServer
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./PythonServer:/usr/src/app/PythonServer
+    js-server:
+        container_name: jsserver
+        build: ./JSServer
+        ports:
+            - "3200:3200"
+        volumes:
+            - ./JSServer:/usr/src/app/JSServer

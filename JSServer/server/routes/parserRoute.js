@@ -5,15 +5,29 @@ const parserRouter = Router();
 const generateHTMLErrors = require("../reports/errorList");
 const Tree = require("../parser/AST/graphAST");
 const { exec } = require("child_process");
+var beautify = require('js-beautify').js;
 
 parserRouter.post("/", (req, res) => {
   let newTree = new Tree();
   let { input } = req.body;
   let errorList = parser.parse(input.toString()).errorList;
   let traduction = parser.parse(input.toString()).traduction;
+  var traductionFormatted = beautify(traduction, 
+    {
+    indent_size: 4, 
+    space_in_empty_paren: true,
+    space_after_anon_function: true,
+    brace_style: "collapse"
+  });
+  traduction = traductionFormatted
+  console.log('TRADUCCIÓN:\n ', traduction);
   let root = parser.parse(input.toString());
-  let dot = newTree.graph(root);
-  dot += "\n}";
+  console.log('NUM. ERRORES:',errorList.length)
+  if(errorList.length <= 0) {
+    let dot = newTree.graph(root);
+    dot += "\n}";
+    generateAST(dot);
+  }
 
   generateHTMLErrors(errorList);
 
@@ -22,7 +36,6 @@ parserRouter.post("/", (req, res) => {
       console.log(error);
     }
   });
-generateAST(dot);
   res.setHeader("Content-Type", "application/json");
   res.statusCode = 200;
   res.json({

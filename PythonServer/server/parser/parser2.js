@@ -87,6 +87,7 @@ class Parser {
     this.padreOperadorNot = '';
     this.padreCondicion = ''
     this.padreCondicionLogica = ''
+    this.padreListaExpresiones = '';
 
     // IF ELSE
     this.padreOpcionElse = '';
@@ -1845,7 +1846,25 @@ class Parser {
     this.CondicionLogica();
     this.padreCondicionLogica = '';
 
+    this.astString += "n" + this.nodeCont + '[label="LISTA_EXPRESIONES"];\n';
+    this.astString += this.padreExpresion + "->n" + this.nodeCont + ";\n";
+    this.padreListaExpresiones = 'n' + this.nodeCont;
+    this.nodeCont++;
+    this.ListaExpresiones();
+    this.padreListaExpresiones = '';
 
+  }
+
+  ListaExpresiones() {
+    if(this.preAnalysis.type  == 'ID' || this.preAnalysis.type  == 'ID' || 
+    this.preAnalysis.type  == 'NOT_OPT' || this.preAnalysis.type  == 'AND_OPT'
+    || this.preAnalysis.type  == 'OR_OPT' || this.preAnalysis.type  == 'XOR_OPT') {
+      this.astString += "n" + this.nodeCont + '[label="EXPRESION"];\n';
+      this.astString += this.padreListaExpresiones + "->n" + this.nodeCont + ";\n";
+      this.padreExpresion = 'n' + this.nodeCont;
+      this.nodeCont++;
+      this.Expresion();
+    }
   }
 
   OperadorNot() {
@@ -1878,7 +1897,6 @@ class Parser {
       this.padreExpresion = 'n' + this.nodeCont;
       this.nodeCont++;
       this.Expresion();
-      this.padreExpresion = '';
 
     }
     if (this.preAnalysis.type == "OR_OPT") {
@@ -1896,7 +1914,6 @@ class Parser {
       this.padreExpresion = 'n' + this.nodeCont;
       this.nodeCont++;
       this.Expresion();
-      this.padreExpresion = '';
     }
     if (this.preAnalysis.type == "XOR_OPT") {
       if (this.doWhileFound) {
@@ -1913,7 +1930,6 @@ class Parser {
       this.padreExpresion = 'n' + this.nodeCont;
       this.nodeCont++;
       this.Expresion();
-      this.padreExpresion = '';
     }
   }
 
@@ -2168,9 +2184,9 @@ class Parser {
     } else if (this.preAnalysis.type == "ID") {
       if (this.forFound != true) {
         if (this.doWhileFound) {
-          this.doWhileContent += this.preAnalysis.value + "";
+          this.doWhileContent += this.preAnalysis.value + " ";
         } else {
-          this.stringTraduccion += this.preAnalysis.value + "";
+          this.stringTraduccion += this.preAnalysis.value + " ";
         }
       } else if (this.forFound == true && this.forValue1 == "") {
         this.forValue1 = this.preAnalysis.value;
@@ -2179,7 +2195,7 @@ class Parser {
         this.forValue2 == "" &&
         this.forValue1 == ""
       ) {
-        this.forValue2 = this.preAnalysis.value;
+        this.forValue2 = this.preAnalysis.value ;
       }
       this.astString += "n" + this.nodeCont + '[label="ID"];\n';
       this.astString += this.padreF + "->n" + this.nodeCont + ";\n";
@@ -2229,9 +2245,9 @@ class Parser {
       this.match("RIGHT_PARENT");
     } else if (this.preAnalysis.type == "STRING") {
       if (this.doWhileFound) {
-        this.doWhileContent += this.preAnalysis.value;
+        this.doWhileContent += this.preAnalysis.value + ' ';
       } else {
-        this.stringTraduccion += this.preAnalysis.value;
+        this.stringTraduccion += this.preAnalysis.value + ' ';
       }
       this.astString += "n" + this.nodeCont + '[label="STRING"];\n';
       this.astString += this.padreF + "->n" + this.nodeCont + ";\n";

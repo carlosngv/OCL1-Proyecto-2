@@ -125,7 +125,8 @@ document.getElementById("new").addEventListener("click", () => {
       // Getting editors value by clicking tab
       if (i >= 1) {
         currentInput = editorList[i - 1].getValue();
-        Scan(currentInput);
+        ScanJS(currentInput, editorList[i - 1]);
+        ScanPython(currentInput, editorList[i - 1]);
       }
 
       tabsArray.map((tab) => {
@@ -156,19 +157,64 @@ function newEditor(index) {
   editorList.push(editor);
 }
 
-async function Scan(data) {
+async function ScanPython(dataR, editor) {
   //let editorPython = CodeMirror.fromTextArea(document.getElementById("python-editor"));
   let url = "http://localhost:3000/scan";
-  let dataBody = {
-    input: data,
-  }
+  let errorsAux = "";
+  let data2 = {
+    input: dataR,
+  };
   await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(dataBody),
-  }).then(
-    res => { console.log(res.json())
-    });
+    body: JSON.stringify(data2),
+  }).then((res) => {
+    // editorPython.getDoc().setValue("");
+    console.log(res.clone().json());
+    res
+      .clone()
+      .json()
+      .then((data) => {
+        console.log(data["errors"]);
+        data["errors"].forEach(async (error) => {
+          errorsAux += ">> " + error["description"] + "\n";
+        });
+      });
+  });
+  editor.getDoc().setValue(errorsAux);
+}
+
+async function ScanJS(dataR, editor) {
+  let url = "http://localhost:3200/parse";
+  var errorsAux2 = "";
+  let data2 = {
+    input: dataR,
+  };
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data2),
+  }).then((res) => {
+    res
+      .clone()
+      .json()
+      .then((data) => {
+        console.log(data["errors"]);
+        data["errors"].forEach(async (error) => {
+          errorsAux2 +=
+            ">> Error sintáctico con [" +
+            error["description"] +
+            "] en la fila: " +
+            error["row"] +
+            " y columna: " +
+            error["column"] +
+            ".\n";
+        });
+        editor.getDoc().setValue(errorsAux2);
+      });
+  });
 }

@@ -1,26 +1,28 @@
 class acion {
-function retfornar() {
+    constructor() {}
 
-while(x != "FALSE") {
-a = 1;
+    function retfornar() {
 
-} 
-if (!a) {
+        while (x != "FALSE") {
+            a = 1;
 
-return 1;
+        }
+        if (!a) {
 
-} 
-if (adios != "hola" && a < 200) {
+            return 1;
 
-do {
-console.log("jajajaja")
-} while(hola > 100);
+        }
+        if (adios != "hola" && a < 200) {
 
-} 
-for(var a = 1; a < 1; a++){
-var a = 1;
-} 
-return 0;
+            do {
+                console.log("jajajaja")
+            } while (hola > 100);
 
-}
+        }
+        for (var a = 1; a < 20; a++) {
+            var a = 1;
+        }
+        return 0;
+
+    }
 }

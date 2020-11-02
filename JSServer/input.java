@@ -12,7 +12,7 @@ public class acion {
         System.out.println("jajajaja");
       } while(hola > 100);
     }
-    for(int a = 1; a<1; a++){
+    for(int a = 1; a<20; a++){
       int a = 1;
     }
     return 0;
