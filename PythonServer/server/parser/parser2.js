@@ -101,7 +101,7 @@ class Parser {
 
     // Llamada Metodo
     this.padreParametrosLlamada = '';
-
+    this.primeraSentenciaInterfaz = false;
 
   }
 
@@ -127,6 +127,7 @@ class Parser {
         //this.match("LAST");
       } else if (this.preAnalysis.type == "RESERVED_INTERFACE") {
         this.SentenciaInterfaz();
+      
         this.ListaInterfaces();
         this.Inicio();
         //this.match("LAST");
@@ -233,11 +234,11 @@ class Parser {
   SentenciaInterfaz() {
     this.astString += "n" + this.nodeCont + '[label="SENTENCIA_INTERFAZ"];\n';
     let father = "n" + this.nodeCont;
-    if (!this.primeraSentenciaClase) {
+    if (!this.primeraSentenciaInterfaz) {
       this.astString += "n0->n" + this.nodeCont + ";\n";
+      this.primeraSentenciaInterfaz = true;
     } else {
-      this.astString +=
-        "n" + (this.nodeCont - 2) + "->n" + this.nodeCont + ";\n";
+      this.astString += "n" + (this.nodeCont - 2) + "->n" + this.nodeCont + ";\n";
     }
     this.nodeCont++;
     this.stringTraduccion += "class ";
@@ -412,7 +413,7 @@ class Parser {
     this.astString += "n" + this.nodeCont + '[label="public"];\n';
     this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
-    this.stringTraduccion += "self ";
+    this.stringTraduccion += "self.";
     
     this.astString += "n" + this.nodeCont + '[label="TIPO"];\n';
     this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
@@ -434,7 +435,6 @@ class Parser {
     this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
     this.match("LEFT_PARENT");
-    this.stringTraduccion += this.preAnalysis.value;
     this.astString += "n" + this.nodeCont + '[label="DECLARACION_PARAMETROS_INTERFAZ"];\n';
     this.astString += this.padreDeclaracionFunciones + "->n" + this.nodeCont + ";\n";
     this.padreDeclaracionParametrosInterfaz = 'n' + this.nodeCont;
@@ -460,7 +460,9 @@ class Parser {
       this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
       this.padreTipo = 'n' + this.nodeCont;
       this.nodeCont++;
+      this.tipoInterfaz = true;
       this.Tipo();
+      this.tipoInterfaz = false;
       this.padreTipo = '';
       this.stringTraduccion += this.preAnalysis.value;
       this.match("ID");
@@ -1124,9 +1126,26 @@ class Parser {
     this.nodeCont++;
     this.match("RESERVED_RETURN");
     this.E(); // Podría omitirse
+
+    if(this.preAnalysis.type == "INCREMENT_OPT") {
+      this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label="++"];\n';
+      this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match("INCREMENT_OPT");
+    }
+    if(this.preAnalysis.type == "DECRE_OPT") {
+      this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label="--"];\n';
+      this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match("DECRE_OPT");
+    }
+
     this.astString += "n" + this.nodeCont + '[label=";"];\n';
     this.astString += this.padreSentenciaReturnMetodos + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
+
     if (this.doWhileFound) {
       this.doWhileContent +='\n';
     } else {
@@ -1151,6 +1170,21 @@ class Parser {
     this.nodeCont++;
     this.E();
     this.padreE = '';
+
+    if(this.preAnalysis.type == "INCREMENT_OPT") {
+      this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label="++"];\n';
+      this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match("INCREMENT_OPT");
+    }
+    if(this.preAnalysis.type == "DECRE_OPT") {
+      this.stringTraduccion += this.preAnalysis.value;
+      this.astString += "n" + this.nodeCont + '[label="--"];\n';
+      this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
+      this.nodeCont++;
+      this.match("DECRE_OPT");
+    }
 
     this.astString += "n" + this.nodeCont + '[label=";"];\n';
     this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
@@ -2139,7 +2173,7 @@ class Parser {
       this.padreT = '';
       this.EP();
     }
-    if (this.preAnalysis.type == "SUBS_SIGN") {
+    if (this.preAnalysis.type == "MINUS_SIGN") {
       if (this.doWhileFound) {
         this.doWhileContent += "- ";
       } else {
@@ -2148,7 +2182,7 @@ class Parser {
       this.astString += "n" + this.nodeCont + '[label="-"];\n';
       this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
-      this.match("SUBS_SIGN");
+      this.match("MINUS_SIGN");
       this.astString += "n" + this.nodeCont + '[label="T"];\n';
       this.astString += this.padreEP + "->n" + this.nodeCont + ";\n";
       this.padreT = 'n' + this.nodeCont
@@ -2262,6 +2296,7 @@ class Parser {
       this.astString += 'n' + (this.nodeCont - 1)  + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
       this.match("ID");
+
     } else if (this.preAnalysis.type == "DECIMAL") {
       if (this.doWhileFound) {
         this.doWhileContent += this.preAnalysis.value + " ";

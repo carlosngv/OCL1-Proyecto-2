@@ -74,19 +74,19 @@ public class prueba_1 {
 
 
 public interface Modificacion {
-    int incremento(int a);
-    int decremento(int a);
+    public int incremento(int a);
+    public int decremento(int a);
 }
 
 
 
 public class clase {
 
-    int incremento(int a){
+    public int incremento(int a){
         return a++;
     }
 
-    int decremento(int a){
+    public int decremento(int a){
         return a--;
     }
 
@@ -112,7 +112,7 @@ public class error {
     * modo panico
     */
 
-    void recuperarse(){
+    public void recuperarse(){
         double x = 5-3*2-4;
         String s = "Texto cadena";
         char y = '3'
@@ -121,7 +121,7 @@ public class error {
     }
 
 
-    void declaraciones(){
+    public void declaraciones(){
         String s = "",t,r,i="Compi",n="1",g="2020";
         int pi = 3.14159265358979323846;
     }
@@ -149,5 +149,3 @@ public class error {
 
 
 }
-Ejemplo.java
-Mostrando Ejemplo.java.

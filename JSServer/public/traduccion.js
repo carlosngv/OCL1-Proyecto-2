@@ -1,28 +1,67 @@
-class ejemplo {
+class prueba_1 {
     constructor() {}
 
-    function accion() {
+    function fibonacci(var n) {
 
-        while (x != "FALSE") {
-            a = 1;
+        if (n > 1) {
 
-        }
-        if (!a) {
+            return fibonacci;
+            //función recursiva
+
+        } else
+        if (n == 1 || n == 0) {
+            // caso base
 
             return 1;
 
-        }
-        if (adios != "hola" && a < 200) {
-
-            do {
-                console.log("jajajaja")
-            } while (hola > 100);
+        } else {
+            //error
+            console.log("Debes ingresar un tamaño mayor o igual a 1, ingresaste: " + n)
+            return -1;
 
         }
-        for (var a = 1; a < 20; a++) {
-            var a = 1;
+    }
+
+    function Ack(var m,
+        var n) {
+
+        if (m == 0) {
+
+            return n + 1;
+
+        } else
+        if (n == 0) {
+
+            return Ack;
+
+        } else {
+
+            return Ack;
+
         }
-        return 0;
+    }
+
+    function main() {
+        var num = 32465;
+        console.log("El factorial de " + num + " es:")
+    }
+
+    function factorial(var num) {
+
+        if (num == 0) {
+
+            return 1;
+
+        } else {
+
+            return num * factorial;
+
+        }
+    }
+
+    function helo(var h) {
+
+        return "Bienvenido a Compiladores 1 " + h;
 
     }
 }

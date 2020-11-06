@@ -8,16 +8,16 @@ Es por eso que se da la solución de dos traductores que tienen como entrada un 
 
 ---
 
-### Aplicación 
+### Descripción de la Aplicación 
 Es un aplicación web, que se encuentra implementada mediante tres contenedores, cuya razón es simular su funcionamiento en distintas computadoras. Cada uno con un servidor propio.
 
 
 
 Cuenta con una interfaz gráfica amigable, se puede definir como una página web estática, ya que no tiene mayor funcionalidad. 
 
-##### Menú
+#### Menú
 El menú consta de las siguientes acciones:
-|  Archivo    | Archivo Traducido |  AST        |
+|  **Archivo**    | Archivo Traducido |  AST        |
 | ----------- | ----------------- | ----------  |
 | Abrir       |     Ambos         |  JavaScript |
 | Guardar     |   JavaScript      |  Python     |
@@ -61,4 +61,14 @@ class ejemplo {
 }
 ```
 
-Esto es un ejemplo de la salida de código emitida por el traductor de Java a JavaScript, realizando primeramente el análisis correspondiente.
+Esto es un ejemplo de la salida de código emitida por el traductor de Java a JavaScript, realizando primeramente el análisis correspondiente. Sintáctico y léxico.
+
+A continuación, un ejemplo de salida del AST generado a partir de una entrada *Java*:
+
+![AST](./Screenshots/ast.png "AST Generado")
+
+
+Este mismo procesos aplica para la generación del archivo traducido en lenguaje Python.
+
+Cabe mencionar que para hacer funcionar la aplicación, debe de ejecturse el siguiente comando: *docker-compose up*. Permite levantar los servidores configuradas para cada uno de los servidores, así, funcionar multiples contenedores relacionados simultaneamente. Esto logra manter un proyecto compacto y capaz de ser ejecutado en cualquier ordenador.
+

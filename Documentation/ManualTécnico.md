@@ -8,9 +8,12 @@ Para realizar el analizador sintáctico del traductor de Python, se utilizó el 
 
 Toma un simbolo de preanalisis y va realizando comparaciones con el tipo de token que corresponde y está definido en la grámatica. Como entrada recibe la lista de tokens, sin errores.
 
-Por cuestión de espacio, se muestra una porción de la gramática de Java utilizado.
+A continuación, se muestra la gramática de Java utilizada:
 
 ```
+
+----------------------------------------------------------- CLASES E INTERFAZ -----------------------------------------------------------
+
 INICIO := 'public' SENTENCIA_CLASE LISTA_CLASES INICIO
         | 'public' SENTENCIA_INTERFAZ LISTA_INTERFACES INICIO
         | 'ultimo'
@@ -24,6 +27,184 @@ SENTENCIA_INTERFAZ := 'interface' id '{' LISTA_DECLARACION_FUNCIONES '}'
 
 LISTA_INTERFACES := SENTENCIA_INTERFAZ LISTA_INTERFACES
                   | EPSILON
+
+
+------------------------------------------------------- METODOS Y FUNCIONES ------------------------------------------------------------
+
+LISTA_DECLARACION_METODOS_FUNCIONES := DECLARACION_METODOS_FUNCIONES LISTA_DECLARACION_METODOS_FUNCIONESP
+                                     | EPSILON
+
+LISTA_DECLARACION_METODOS_FUNCIONESP := DECLARACION_METODOS_FUNCIONES LISTA_DECLARACION_METODOS_FUNCIONESP                      
+                                      | EPSILON
+
+
+LISTA_DECLARACION_FUNCIONES := DECLARACION_FUNCION LISTA_DECLARACION_FUNCIONESP
+                           | EPSILON
+
+LISTA_DECLARACION_FUNCIONESP := DECLARACION_FUNCION LISTA_DECLARACION_FUNCIONESP
+                            | EPSILON
+
+DECLARACION_METODOS_FUNCIONES := 'public' 'void' id '(' DECLARACION_PARAMETROS 
+                               | 'public' TIPO id '(' DECLARACION_PARAMETROS 
+
+DECLARACION_FUNCION := 'public' 'void' id '(' DECLARACION_PARAMETROS_INTERFAZ
+                     | 'public' TIPO id '(' DECLARACION_PARAMETROS_INTERFAZ
+
+
+DECLARACION_PARAMETROS_INTERFAZ := TIPO id LISTA_PARAMETROS ')' ';'
+                                 | ')' ';'
+   
+DECLARACION_PARAMETROS := TIPO id LISTA_PARAMETROS ')' LISTAINSTR_LLAVES
+                        | ')' LISTAINSTR_LLAVES
+                                
+LISTA_PARAMETROS =: ',' TIPO id LISTA_PARAMETROS
+                  | EPSILON  
+
+
+---------------------------------------------------------- TIPO ------------------------------------------------------------------------------------------ 
+
+TIPO := int 
+      | double
+      | char
+      | String
+      | boolean
+
+-------------------------------------------------------  INSTRUCCIONES ------------------------------------------------------------------------------------------ 
+
+INSTRUCCION  := DECLARACION_VARIABLE; 
+                | SENTENCIA_WHILE 
+                | SENTENCIA_IF_ELSE 
+                | SENTENCIA_FOR 
+                | SENTENCIA_DO_WHILE 
+                | SENTENCIA_PRINT 
+                | ASIGNACION_SIMPLE 
+                | SENTENCIA_CONTINUE 
+                | SENTENCIA_BREAK 
+                | SENTENCIA_RETURN_FUNCIONES 
+                | SENTENCIA_RETURN_METODOS 
+                | LLAMADA_METODO 
+                | SENTENCIA_MAIN 
+                | EPSILON 
+
+
+LISTA_INSTRUCCIONES := INSTRUCCION LISTA_INSTRUCCIONESP
+
+LISTA_INSTRUCCIONESP := INSTRUCCION LISTA_INSTRUCCIONESP
+                      | EPSILON
+
+DECLARACION_VARIABLE := TIPO id DECLARACION_VARIABLEP
+
+DECLARACION_VARIABLEP := LISTA_ID ASIGNACION ;
+
+LISTA_ID := ',' id LISTA_ID
+          | EPSILON
+
+LISTAINSTR_LLAVES := '{' LISTA_INSTRUCCIONES '}'
+
+-------------------------------------------------------  LLAMADA METODO ------------------------------------------------------------------------------------------ 
+
+LLAMADA_METODO := id '(' LISTA_PARAMETROS ')' ';'
+
+-------------------------------------------------------  ASIGNACIÓN ------------------------------------------------------------------------------------------ 
+
+ASIGNACION := '=' E ';'
+            | EPSILON
+
+ASIGNACION_SIMPLE := id ASIGNACION_SIMPLEP
+
+ASIGNACION_SIMPLEP := '=' E ';'
+
+LLAMADA_METODO := 
+
+------------------------------------------------------- SENTENCIA MAIN ------------------------------------------------------------------------------------------
+
+SENTENCIA_MAIN := 'public' 'static' 'void' 'main' '(' 'String' '[' ']' 'args' ')' LISTAINSTR_LLAVES
+
+------------------------------------------------------- SENTENCIA RETURN ------------------------------------------------------------------------------------------
+
+SENTENCIA_RETURN_FUNCIONES := 'return' E ';'
+                            
+SENTENCIA_RETURN_METODOS := 'return' ';'
+
+
+------------------------------------------------------- SENTENCIA CONTINUE ------------------------------------------------------------------------------------------
+
+SENTENCIA_CONTINUE := 'continue' ';'
+
+--------------------------------------------------------- SENTENCIA BREAK ------------------------------------------------------------------------------------------
+
+SENTENCIA_BREAK := 'break' ';'
+
+-------------------------------------------------------- SENTENCIA WHILE -------------------------------------------------------------------------------------------  
+
+SENTENCIA_WHILE := 'while' '(' EXPRESION ')' LISTAINSTR_LLAVES
+
+-------------------------------------------------------- SENTENCIA IF -------------------------------------------------------------------------------------------
+
+SENTENCIA_IF := 'if' '(' EXPRESION ')' LISTAINSTR_LLAVES OPCION_ELSE
+
+OPCION_ELSE := 'else' LISTA_IF 
+             | EPSILON 
+
+LISTA_IF := LISTAINSTR_LLAVES 
+          | SENTENCIA_IF
+
+--------------------------------------------------------- SENTENCIA FOR ------------------------------------------------------------------------------------------
+
+SENTENCIA_FOR := 'for' '(' DECLARACION_FOR ';' EXPRESION ';' id DECREMENT_INCREMENT ')' LISTAINSTR_LLAVES
+
+DECREMENT_INCREMENT := '++'
+                     | '--'
+
+DECLARACION_FOR := TIPO id '=' E 
+                 | id '=' E
+
+--------------------------------------------------------- SENTENCIA PRINT ------------------------------------------------------------------------------------------ 
+
+SENTENCIA_PRINT := 'System' '.' 'out' '.' OPCION_PRINT '(' E ')' ';'
+OPCION_PRINT := 'println'
+              | 'print'
+
+------------------------------------------------------------ CONDICIÓN ----------------------------------------------------------------------------------------------- 
+
+EXPRESION := OPERADOR_NOT E CONDICION CONDICION_LOGICA
+
+OPERADOR_NOT := '!'
+               | EPSILON
+
+CONDICION_LOGICA := '&&' EXPRESION
+                   | '||' EXPRESION
+                   | '^' EXPRESION
+                   | EPSILON
+
+
+CONDICION := '<=' E
+           | '>=' EP
+           | '>' E 
+           | '<' E
+           | '!=' E 
+
+------------------------------------------------------- EXPRESIÓN ------------------------------------------------------------------------------------------ 
+
+E := T EP
+
+EP := + T EP
+    | - T EP
+    | EPSILON
+
+T := F TP
+
+TP := * F TP
+    | / F TP
+    | EPSILON
+
+F := numero
+   | decimal
+   | true
+   | false
+   | id
+   | '(' E ')'
+   | string
 ```
 
 Define el inicio, las clases e interfaces.
@@ -37,6 +218,9 @@ De existir un error, este se almacena en una lista de errores para ser desplegad
 Para realizar el análisis sintáctico, se utilizó la herramienta *Jison* para *nodejs*.
 
 Jison toma una gramática libre de contexto como entrada y produce código JavaScript capaz de parsear el lenguaje descrito por dicha gramática. Una vez se tenga el script generado podemos usarlo para parsear la entrada y aceptarla, rechazarla o ejecutar acciones con base en la entrada. Si se está familiarizado con Bison, Yacc o algún otro similar ya se está listo para iniciar. Jison genera tanto el analizador léxico como el analizador sintáctico.
+
+
+Para generar los reportes de errores y tokens, se extrae la lista de cada analizador y se escriben en un archivo *.html*. Obteniendo tablas con la información mencionada.
 
 
 
@@ -111,6 +295,61 @@ El AST del servidor de python es un poco más complicado. Se realiza a mano, mie
 
 Este es un ejemplo que define los nodos y enlaza de forma manual. Generando así el archivo *DOT*.
 
+Para generar la gráfica del AST, se utilizó la librería *node-graphviz* que puede descargarse del gestor de paquetes *NPM*. Primeramente debe importarse y al terminar de generar el dot, se utiliza el siguiente comando propio de la librería:
+
+``` JavaScript
+const { graphviz } = require("node-graphviz");
+
+...
+
+graphviz.dot(this.astString, 'svg').then((svg) => {
+        // Write the SVG to file
+        fs.writeFileSync('public/ast.svg', svg);
+      });
+      exec("dot -Tpdf ast.dot -o public/ast.pdf", (error, data, getter) => {
+        if(error){
+          console.log("error",error.message);
+          return;
+        }
+        if(getter){
+          console.log("data",data);
+          return;
+        }
+        console.log("data",data);
+      
+      });
+
+
+```
+
+Como resultado es un archivo .svg, que puede visualizarse dentro de los navegadores e incluso dentro de *VSCode* gracias a una extensión previsualizadora.
+
+Para que el cliente pueda descargar los AST y traducción resultante, se utilizaron las siguientes rutas dentro del servidor:
+
+```
+parserRouter.get("/downloadTranslation", (req, res) => {
+  res.download("public/traduccion.js", "traduccion.js");
+});
+
+parserRouter.get("/downloadAST", (req, res) => {
+  res.download("public/ast.svg", "ast.svg");
+});
+```
+
+*res.download* permite al cliente descargar archivos que se encuentren almacenados dentro del servidor, aplica para ambos servidores.
+
+Cabe mencionar que los archivos generados son guardados en una carpeta public dentro del servidor.
+
+## Traducción
+
+La traducción en ambos servidores se realizó de manera similar. 
+
+Para *Python*, mientras se iba recorriendo la gramática, se iba concatenando la traducción, acorde a la sintáxis de *Python*, en una variable de tipo string declarada para toda la clase. Al parsear la entrada, se puede acceder al atributo *traduction* del analizador y así mismo escribir el archivo *.py* correspondiente, utilizando la librería *fs* de *nodejs*.
+
+Para el analizador de *JavaScript*, se parte del mismo concepto de realizar el *AST*. El padre o raíz de la grámatica, obtiene la traducción que se va ligando a los hijos de sus hijos. Obteniendo finalmente la traducción  completa a *JavaScript*. De manera similar, se puede acceder al atributo *traduction* del parser, que devuelve como objeto el *AST*.
+
+---
+
 ## Configuración de Contenedores
 ---
 
@@ -182,8 +421,7 @@ services:
 Primero que todo, se define la versión a utilizar. En este caso se optó por la tres, pero nunca está de más utilizar la más reciente. Seguido, los servicios. Se puede definir cualquier nombre para cada servicio. Dentro de cada servicio, se define el contenedor, la imagen (si es necesario), la propiedad build que indica en qué ruta se encuentra nuestro contenido para el contenedor, los puertos para el contenedor y local y los volumenes, que son los directorios fuente que son objetivo dentro de los directorios del contenedor.
 
 Ya cuando se termina de configurar se ejecutan los siguientes comandos:
-* *docker-compose build .* 
-
+* docker-compose build .
 * docker-compose up
 
 Es importante estar ubicados en la misma ruta que el archivo *YML*. docker-compose build reliza las configuraciones necesarias. como descargar las imagenes, configurar puertos y demás. Docker-compose up levanta los servicios definidos.

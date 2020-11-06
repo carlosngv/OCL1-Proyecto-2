@@ -190,6 +190,9 @@ class Scanner {
                 this.setToken("LEFT_BRACE", char);
               } else if (char == "}") {
                 this.setToken("RIGHT_BRACE", char);
+              } else if (char.match(/[0-9]/)) {
+                this.state = 10;
+                this.aux += char;
               }
             } else if (char == "-") {
               this.aux += char;
@@ -246,7 +249,7 @@ class Scanner {
                 this.setToken("COMMA", char);
               } else if (char == "=") {
                 this.aux += char;
-                this.state = 9;
+                this.state = 11;
               } else if (char == "^") {
                 this.aux += char;
                 this.state = 16;
