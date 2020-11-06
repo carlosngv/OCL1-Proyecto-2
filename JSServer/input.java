@@ -1,6 +1,6 @@
-public class acion {
+public class ejemplo {
   
-  public int retfornar() {
+  public int accion() {
     while(x != "FALSE") {
       a = 1;
     }
