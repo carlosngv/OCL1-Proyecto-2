@@ -3,6 +3,8 @@ const fs = require("fs");
 const parser = require("../parser/grammar");
 const parserRouter = Router();
 const generateHTMLErrors = require("../reports/errorList");
+const generateHTMLTokens = require("../reports/tokenList");
+
 const Tree = require("../parser/AST/graphAST");
 const { exec } = require("child_process");
 var beautify = require("js-beautify").js;
@@ -11,8 +13,10 @@ const { graphviz } = require("node-graphviz");
 parserRouter.post("/", async (req, res) => {
   let newTree = new Tree();
   let { input } = req.body;
-  let errorList = parser.parse(input.toString()).errorList;
-  let traduction = parser.parse(input.toString()).traduction;
+  let parserExt = parser.parse(input.toString())
+  let errorList = parserExt.errorList;
+  let traduction = parserExt.traduction;
+  let tokenList = parserExt.tokenList;
   var traductionFormatted = beautify(traduction, {
     indent_size: 4,
     space_in_empty_paren: true,
@@ -23,6 +27,15 @@ parserRouter.post("/", async (req, res) => {
   console.log("TRADUCCIÓN:\n ", traduction);
   let root = parser.parse(input.toString());
   console.log("NUM. ERRORES:", errorList.length);
+  
+  generateHTMLErrors(errorList);
+  generateHTMLTokens(tokenList);
+  fs.writeFile("public/traduccion.js", traduction, (error) => {
+    if (error) {
+      console.log(error);
+    }
+  });
+
   if (errorList.length <= 0) {
     let dot = newTree.graph(root);
     dot += "\n}";
@@ -32,14 +45,6 @@ parserRouter.post("/", async (req, res) => {
     });
     await generateAST(dot);
   }
-
-  generateHTMLErrors(errorList);
-
-  fs.writeFile("public/traduccion.js", traduction, (error) => {
-    if (error) {
-      console.log(error);
-    }
-  });
   res.setHeader("Content-Type", "application/json");
   res.statusCode = 200;
   res.json({

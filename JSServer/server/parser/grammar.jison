@@ -1,85 +1,95 @@
+%{
+    const Token = require('./Token');
+    var tokenList = [];
 
+%}
 %lex
 %options case-insensitive
 
 %%
 
 \s+			{}								
-[ \t\r\n\f] %{  %}
-\n                  {}
+[ \t\r\n\f] {}
+\n          {}
                     
 
+
+"//".*	               %{  var newToken = new Token("COMENTARIO_UNILINEA",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'COMENTARIO_UNILINEA';%}
+[/][*][^*]*[*]+([^/*][^*]*[*]+)*[/] %{  var newToken = new Token("COMENTARIO_MULTILINEA",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'COMENTARIO_MULTILINEA';%}
+\"[^\"]*\"		%{  var newToken = new Token("STRING",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'STRING';%}
+
+";"      %{  var newToken = new Token("PUNTO_COMA",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'PUNTO_COMA';%}
+":"      %{  var newToken = new Token("DOS_PUNTOS",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'DOS_PUNTOS';%}
+","      %{  var newToken = new Token("COMA",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'COMA';%}
+"++"   %{ var newToken = new Token("INCR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'INCR';%}
+"+"  %{  var newToken = new Token("MAS",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MAS';%}
+"--" %{  var newToken = new Token("DECR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'DECR';%}
+"-"     %{  var newToken = new Token("MENOS",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MENOS';%}
+"/"     %{  var newToken = new Token("DIVISION",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'DIVISION';%}
+"*"     %{  var newToken = new Token("MULT",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MULT';%}
+"."     %{  var newToken = new Token("PUNTO",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'PUNTO';%}
+
+
+"<"    %{  var newToken = new Token("MENOR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MENOR';%}
+">"        %{  var newToken = new Token("MAYOR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MAYOR';%} 
+"<="     %{  var newToken = new Token("MENOR_IGUAL",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MENOR_IGUAL';%}
+">=" %{  var newToken = new Token("MAYOR_IGUAL",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'MAYOR_IGUAL';%}
+
+"==" %{  var newToken = new Token("IGUALDAD",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'IGUALDAD';%}  
+"!=" %{  var newToken = new Token("DESIGUALDAD",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'DESIGUALDAD';%}
+"||"   %{  var newToken = new Token("OR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'OR';%}        
+"&&"   %{  var newToken = new Token("AND",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'AND';%}       
+"^" %{  var newToken = new Token("XOR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'XOR';%}
+"!"   %{  var newToken = new Token("NEG",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'NEG';%}     
+"="     %{  var newToken = new Token("ASIGNACION",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'ASIGNACION';%}
+
+
+
+"("     %{  var newToken = new Token("PARENTIZQ",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'PARENTIZQ';%}
+")"    %{  var newToken = new Token("PARENTDER",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'PARENTDER';%}
+"["     %{  var newToken = new Token("BRACKIZQ",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'BRACKIZQ';%}
+"]"     %{  var newToken = new Token("BRACKDER",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'BRACKDER';%}
+"{"     %{  var newToken = new Token("LLAVEIZQ",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'LLAVEIZQ';%}
+"}"     %{  var newToken = new Token("LLAVEDER",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'LLAVEDER';%}
+
+"public"    %{  var newToken = new Token("RESERVADA_PUBLIC",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_PUBLIC';%}
+"class"     %{  var newToken = new Token("RESERVADA_CLASS",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_CLASS';%}
+"interface" %{  var newToken = new Token("RESERVADA_INTERFACE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_INTERFACE';%}
+"int"    %{  var newToken = new Token("RESERVADA_INT",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_INT'; return 'RESERVADA_DOUBLE';%}
+"double"  %{  var newToken = new Token("RESERVADA_DOUBLE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_BOOLEAN';%}
+"boolean"     %{  var newToken = new Token("RESERVADA_BOOLEAN",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);%}
+"void" %{ var newToken = new Token("RESERVADA_VOID",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_VOID';%}
+"char" %{  var newToken = new Token("RESERVADA_CHAR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_CHAR';%}
+"null" %{  var newToken = new Token("RESERVADA_NULL",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_NULL';%}
+"String" %{ var newToken = new Token("RESERVADA_STRING",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_STRING';%}
+"if" %{  var newToken = new Token("RESERVADA_IF",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_IF';%}  
+"else" %{  var newToken = new Token("RESERVADA_ELSE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_ELSE';%}        
+"for" %{  var newToken = new Token("RESERVADA_FOR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_FOR';%}
+"while" %{  var newToken = new Token("RESERVADA_WHILE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_WHILE';%}
+"do" %{  var newToken = new Token("RESERVADA_DO",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_DO';%}
+"true" %{  var newToken = new Token("RESERVADA_TRUE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_TRUE';%}
+"false" %{  var newToken = new Token("RESERVADA_FALSE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_FALSE';%}
+"static" %{  var newToken = new Token("RESERVADA_STATIC",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_STATIC';%}     
+"main" %{  var newToken = new Token("RESERVADA_MAIN",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_MAIN';%}
+"continue" %{ var newToken = new Token("RESERVADA_CONTINUE",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_CONTINUE'; %}
+"break" %{ var newToken = new Token("RESERVADA_BREAK",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_BREAK';%}
+"System" %{ var newToken = new Token("RESERVADA_SYSTEM",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'RESERVADA_SYSTEM';%}
+"out" %{  var newToken = new Token("RESERVADA_OUT",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_OUT';%}
+"println" %{  var newToken = new Token("RESERVADA_PRINTLN",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_PRINTLN';%}
+"print" %{  var newToken = new Token("RESERVADA_PRINT",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_PRINT';%}       
+"return" %{  var newToken = new Token("RESERVADA_RETURN",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_RETURN';%}
+"args" %{  var newToken = new Token("RESERVADA_ARGS",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'RESERVADA_ARGS';%}
+
+
+
     
-\"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'STRING'; }
-[0-9]+("."[0-9]+)?\b  	return 'DECIMAL';
-[0-9]+\b				return 'ENTERO';
-"//".*					return 'STRING';		
-[/][*][^*]*[*]+([^/*][^*]*[*]+)*[/]	 
+[0-9]+("."[0-9]+)?\b  	 %{  var newToken = new Token("DECIMAL",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'DECIMAL';%}
+[0-9]+\b				 %{  var newToken = new Token("ENTERO",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken); return 'ENTERO';%}
+([a-zA-Z_])[a-zA-Z0-9_]* %{  var newToken = new Token("ID",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'ID';%}
 
-":"     return 'DOS_PUNTOS';
-";"     return 'PUNTO_COMA';
-","     return 'COMA'
-"++" return 'INCR';           
-"+"     return 'MAS';
-"--" return 'DECR';   
-"-"     return 'MENOS';
-"/"     return 'DIVISION';
-"*"     return 'MULT';
-"."     return 'PUNTO';
+"'"."'"                               %{  var newToken = new Token("CHAR",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'CHAR';%}
 
-
-"<" return 'MENOR';           
-">" return 'MAYOR';           
-"<=" return 'MENOR_IGUAL';           
-">=" return 'MAYOR_IGUAL'; 
-
-"==" return 'IGUALDAD';           
-"!=" return 'DESIGUALDAD';           
-"||" return 'OR';           
-"&&" return 'AND';           
-"^" return 'XOR';     
-"!" return 'NEG';           
-"="     return 'ASIGNACION';
-
-
-
-"("     return 'PARENTIZQ';
-")"     return 'PARENTDER';
-"["     return 'BRACKIZQ';
-"]"     return 'BRACKDER';
-"{"     return 'LLAVEIZQ';
-"}"     return 'LLAVEDER';
-
-"public"    return 'RESERVADA_PUBLIC';
-"class"     return 'RESERVADA_CLASS';
-"interface" return 'RESERVADA_INTERFACE';
-"int"    return 'RESERVADA_INT';
-"double"  return 'RESERVADA_DOUBLE';
-"boolean"     return 'RESERVADA_BOOLEAN';
-"void" return 'RESERVADA_VOID';   
-"char" return 'RESERVADA_CHAR';
-"null" return 'RESERVADA_NULL';           
-"String" return 'RESERVADA_STRING';           
-"if" return 'RESERVADA_IF';           
-"else" return 'RESERVADA_ELSE';           
-"for" return 'RESERVADA_FOR';           
-"while" return 'RESERVADA_WHILE';           
-"do" return 'RESERVADA_DO';           
-"true" return 'RESERVADA_TRUE';   
-"false" return 'RESERVADA_FALSE';     
-"static" return 'RESERVADA_STATIC';           
-"main" return 'RESERVADA_MAIN';           
-"continue" return 'RESERVADA_CONTINUE';          
-"break" return 'RESERVADA_BREAK';           
-"System" return 'RESERVADA_SYSTEM'; 
-"out" return 'RESERVADA_OUT';           
-"println" return 'RESERVADA_PRINTLN'; 
-"print" return 'RESERVADA_PRINT';          
-"return" return 'RESERVADA_RETURN';  
-"args" return 'RESERVADA_ARGS';
-([a-zA-Z])[a-zA-Z0-9_]*	return 'ID';
-
-<<EOF>>                 return 'EOF';
+<<EOF>>                 %{  var newToken = new Token("EOF",yytext.substr(0,yyleng), yylloc.first_line, yylloc.first_column); tokenList.push(newToken);return 'EOF';%}
 
 .                       { console.error('Este es un error léxico: ' + yytext + '  en la linea: ' + yylloc.first_line + ', en la columna: ' + yylloc.first_column);}
 /lex
@@ -119,6 +129,7 @@ inicio: lista_clases EOF {
     $$.traduction = $1.traduction;
     this.traduction = $$.traduction;
     $$.errorList = errorList;
+    $$.tokenList = tokenList;
     return $$;
 }
       | lista_interfaces inicio { 
@@ -128,6 +139,7 @@ inicio: lista_clases EOF {
             $$.traduction = $1.traduction;
             this.traduction = $$.traduction;
             $$.errorList = errorList;
+            $$.tokenList = tokenList;
             return $$;
       }
       | EOF {  }
@@ -144,6 +156,11 @@ lista_clases: lista_clases sentencia_clase {
                 $$.setChild($1);
                 $$.traduction = $1.traduction
             }
+            | comentario {
+                $$ = new Node('LISTA_CLASES', '');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+            }
             | error {
                         newError = new Error(yytext, this._$.first_line, this._$.first_column);
                         errorList.push(newError);
@@ -159,6 +176,11 @@ sentencia_clase: RESERVADA_PUBLIC RESERVADA_CLASS ID bloque_declaracion_metodos_
     $$.setChild($4);
     $$.traduction = $2 + ' ' + $3 + ' ' + $4.traduction; // class hola
  }
+ | comentario {
+                $$ = new Node('SENTENCIA_CLASE', '');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+            }
                 | error {
                      console.log("1. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                      newError = new Error(yytext, this._$.first_line, this._$.first_column);
@@ -180,6 +202,11 @@ bloque_declaracion_metodos_funciones: LLAVEIZQ lista_declaracion_metodos_funcion
                                  $$.setChild(new Node($2, 'LLAVEDER'));
                                  $$.traduction = $1 + $2;
                              }
+                             | comentario {
+                $$ = new Node('BLOQUE_DECLARACION_MF', '');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+            }
                              | error {
                                 console.log("2. Error sintáctico en línea: " + this._$.first_line + " y columna: " + this._$.first_column); 
                                 newError = new Error(yytext, this._$.first_line, this._$.first_column);
@@ -389,15 +416,73 @@ instruccion: asignacion_simple  {
                $$ = new Node('INSTRUCCION','');
                $$.setChild($1);
                $$.traduction = $1.traduction;
+           }
+           | llamada_metodo { 
+               $$ = new Node('INSTRUCCION','');
+               $$.setChild($1);
+               $$.traduction = $1.traduction;
+           }
+           | comentario { 
+               $$ = new Node('INSTRUCCION','');
+               $$.setChild($1);
+               $$.traduction = $1.traduction;
            };
-           
+
+
+llamada_metodo: ID PARENTIZQ PARENTDER PUNTO_COMA {
+    $$ = new Node('LLAMADA_METODO', '');
+    $$.setChild(new Node($1, 'ID'));
+    $$.setChild(new Node($2, 'PARENTIZQ'));  
+    $$.setChild(new Node($3, 'PARENTDER'));
+    $$.setChild(new Node($4, 'PUNTO_COMA')); 
+    $$.traduction = $1 + $2 + $3 + $4;
+}           
+            | ID PARENTIZQ lista_parametros_llamada PARENTDER PUNTO_COMA {
+                $$ = new Node('LLAMADA_METODO', '');
+                $$.setChild(new Node($1, 'ID'));
+                $$.setChild(new Node($2, 'PARENTIZQ')); 
+                $$.setChild($3); 
+                $$.setChild(new Node($4, 'PARENTDER'));
+                $$.setChild(new Node($5, 'PUNTO_COMA')); 
+                $$.traduction = $1 + $2 + $3.traduction + $4 + $5;
+            };
+
+lista_parametros_llamada: expresion COMMA lista_parametros_llamada {
+                $$ = new Node('LST_PARAMETROS_LLAMADA', '');
+                $$.setChild($1);
+                $$.setChild(new Node($2, 'COMMA'));
+                $$.setChild($3);
+                $$.traduction = $1.traduction + $2 + $3.traduction;
+
+}
+                        | expresion {
+                            $$ = new Node('LST_PARAMETROS_LLAMADA', '');
+                            $$.setChild($1);
+                            $$.traduction = $1.traduction;
+                        };
+
+comentario: COMENTARIO_UNILINEA {
+    $$ = new Node('COMENTARIO','');
+    $$.setChild(new Node($1, 'COMENTARIO_UNILINEA')); 
+    $$.traduction = $1 + '\n';
+} 
+          | COMENTARIO_MULTILINEA {
+    $$ = new Node('COMENTARIO','');
+    $$.setChild(new Node($1, 'COMENTARIO_MULTILINEA')); 
+    $$.traduction = $1 + '\n';
+};  
 
 lista_instrucciones: lista_instrucciones instruccion { 
     $$ = new Node('LISTA_INSTRUCCIONES','');
     $$.setChild($1);
     $$.setChild($2);
     $$.traduction = $1.traduction + ' '+ $2.traduction;
-}
+}   
+            | comentario {
+                $$ = new Node('LISTA_INSTRUCCIONES', '');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+            }
                    | instruccion { 
                         $$ = new Node('LISTA_INSTRUCCIONES','');
                         $$.setChild($1);
@@ -423,6 +508,11 @@ instrucciones_llaves: LLAVEIZQ lista_instrucciones LLAVEDER {
     
 
 }
+            | comentario {
+                $$ = new Node('INSTR_LLAVES', '');
+                $$.setChild($1);
+                $$.traduction = $1.traduction;
+                }
                     | LLAVEIZQ LLAVEDER { 
                         $$ = new Node('INSTR_LLAVES', '');
                         $$.setChild(new Node($1, 'LLAVEIZQ'));
@@ -672,7 +762,7 @@ condicion: PARENTIZQ expresion PARENTDER {
 expresion : MENOS expresion %prec UMENOS	{ 
         $$ = new Node('EXPRESION',''); 
         $$.setChild(new Node($1, 'MENOS'));
-        $$.setChild($1);
+        $$.setChild($2);
         $$.traduction = '-' + $2.traduction;
     }    
           | NEG expresion	            { 
@@ -796,7 +886,7 @@ expresion : MENOS expresion %prec UMENOS	{
           | STRING			         { 
               $$ = new Node('EXPRESION','');
               $$.setChild(new Node($1, 'STRING'));
-              $$.traduction = '"'+ $1 +'"';
+              $$.traduction = ''+ $1 +'';
           }                   
           | PARENTIZQ expresion PARENTDER { 
               $$ = new Node('EXPRESION','');
@@ -814,6 +904,7 @@ expresion : MENOS expresion %prec UMENOS	{
               $$ = new Node('EXPRESION','');
               $$.setChild(new Node($1, 'NULL'));
               $$.traduction = $1
+        
           };       
 
 

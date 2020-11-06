@@ -99,6 +99,9 @@ class Parser {
     this.padreListaID = '';
     this.padreDeclaracionVariableP = '';
 
+    // Llamada Metodo
+    this.padreParametrosLlamada = '';
+
 
   }
 
@@ -515,7 +518,11 @@ class Parser {
       this.astString += "n" + this.nodeCont + '[label="ID"];\n';
       this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
-      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      if(this.preAnalysis.type =="STRING") {
+        this.astString += "n" + this.nodeCont + '[label='+ this.preAnalysis.value  +'];\n';
+      } else {
+        this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      }
       this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
       this.match("ID");
@@ -573,7 +580,12 @@ class Parser {
       this.astString += "n" + this.nodeCont + '[label="ID"];\n';
       this.astString += this.padreDeclaracionParametros + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
-      this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      if(this.preAnalysis.type =="STRING") {
+        this.astString += "n" + this.nodeCont + '[label='+ this.preAnalysis.value  +'];\n';
+      } else {
+        this.astString += "n" + this.nodeCont + '[label="'+ this.preAnalysis.value  +'"];\n';
+      }
+      
       this.astString += 'n'+(this.nodeCont - 1) + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
       this.match("ID");
@@ -1115,6 +1127,11 @@ class Parser {
     this.astString += "n" + this.nodeCont + '[label=";"];\n';
     this.astString += this.padreSentenciaReturnMetodos + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
+    if (this.doWhileFound) {
+      this.doWhileContent +='\n';
+    } else {
+      this.stringTraduccion += '\n';
+    }
     this.match("SEMICOLON");
   }
 
@@ -1138,6 +1155,11 @@ class Parser {
     this.astString += "n" + this.nodeCont + '[label=";"];\n';
     this.astString += this.padreSentenciaReturnFunciones + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
+    if (this.doWhileFound) {
+      this.doWhileContent +='\n';
+    } else {
+      this.stringTraduccion += '\n';
+    }
     this.match("SEMICOLON");
   }
 
@@ -1311,16 +1333,52 @@ class Parser {
     this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
     this.match("LEFT_PARENT");
-    this.astString += "n" + this.nodeCont + '[label="DECLARACION_PARAMETROS"];\n';
+    this.astString += "n" + this.nodeCont + '[label="PARAMETROS_LLAMADA"];\n';
     this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
-    this.padreDeclaracionParametros = 'n' + this.nodeCont;
+    this.padreParametrosLlamada = 'n' + this.nodeCont;
     this.nodeCont++;
-    this.DeclaracionParametros();
-    this.padreDeclaracionParametros = '';
+    this.ParametrosLlamada();
+    this.padreParametrosLlamada = '';
+
+    if (this.doWhileFound) {
+      this.doWhileContent += this.preAnalysis.value+ '\n';
+    } else {
+      this.stringTraduccion += this.preAnalysis.value + '\n';
+    }
+    this.astString += "n" + this.nodeCont + '[label=")"];\n';
+    this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+    this.nodeCont++;
+    this.match("RIGHT_PARENT");
     this.astString += "n" + this.nodeCont + '[label=";"];\n';
     this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
     this.match("SEMICOLON");
+  }
+
+  ParametrosLlamada() {
+    
+    if(this.preAnalysis.type == 'ID' || this.preAnalysis.type == 'STRING' || this.preAnalysis.type == 'NUMBER' ||
+    this.preAnalysis.type == 'RESERVED_TRUE' || this.preAnalysis.type == 'RESERVED_FALSE' || this.preAnalysis.type == 'DECIMAL'  ) {
+      this.astString += "n" + this.nodeCont + '[label="EXPRESION"];\n';
+      this.astString += this.padreParametrosLlamada + "->n" + this.nodeCont + ";\n";
+      this.padreExpresion = 'n' + this.nodeCont;
+      this.nodeCont++;
+      this.Expresion();
+      this.padreExpresion = '';
+      if(this.preAnalysis.type == 'COMMA') {
+        if (this.doWhileFound) {
+          this.doWhileContent += this.preAnalysis.value;
+        } else {
+          this.stringTraduccion += this.preAnalysis.value;
+        }
+        this.astString += "n" + this.nodeCont + '[label=","];\n';
+        this.astString += this.padreLlamadaMetodo + "->n" + this.nodeCont + ";\n";
+        this.nodeCont++;
+        this.match('COMMA');
+      }
+      this.ParametrosLlamada()
+    }
+    
   }
 
   SentenciaMain() {
@@ -1464,11 +1522,6 @@ class Parser {
     this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
     this.nodeCont++;
     this.match("LEFT_PARENT");
-    /* if (this.doWhileFound) {
-      this.doWhileContent += this.preAnalysis.value;
-    } else {
-      this.stringTraduccion += this.preAnalysis.value;
-    } */
     this.astString += "n" + this.nodeCont + '[label="E"];\n';
     this.astString += this.padreSentenciaPrint + "->n" + this.nodeCont + ";\n";
     this.padreE = 'n' + this.nodeCont
@@ -1631,6 +1684,7 @@ class Parser {
       this.padreSentenciaIf = 'n' + this.nodeCont;
       this.nodeCont++;
       this.SentenciaIf();
+      this.elifFound = false;
       this.padreSentenciaIf = '';
     }
   }
@@ -2263,41 +2317,6 @@ class Parser {
     }
   }
 
-  /* match(type) {
-    this.Comentario();
-    if (this.errorFound) {
-      if (this.numPreAnalysis < this.tokenList.length - 1) {
-        this.numPreAnalysis++;
-        this.preAnalysis = this.tokenList[this.numPreAnalysis];
-        if (
-          this.preAnalysis.type == "SEMICOLON" ||
-          this.preAnalysis.type == "RIGHT_BRACE"
-        ) {
-          this.errorFound = false;
-          let newError = new Error(
-            "Se recuperó del error en la fila " + this.preAnalysis.row
-          );
-          this.errorList.push(newError);
-        }
-      }
-    } else {
-      if (this.preAnalysis.type != type) {
-        if (this.errorFound == false) {
-          console.log("Se esperaba", type);
-          let newError = new Error("Error encontrado, se esperaba " + type);
-          this.errorList.push(newError);
-          this.errorFound = true;
-        }
-      }
-      if (this.preAnalysis.type != "LAST") {
-        if (this.preAnalysis.type != type) {
-          this.errorFound = true;
-        }
-        this.numPreAnalysis++;
-        this.preAnalysis = this.tokenList[this.numPreAnalysis];
-      }
-    }
-  } */
 
   match(type) {
     this.Comentario();

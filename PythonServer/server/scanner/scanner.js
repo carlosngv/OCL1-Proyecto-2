@@ -216,7 +216,7 @@ class Scanner {
             this.aux += char;
             break;
           case 5:
-            if (char.match(/[a-zA-Z]/i)) {
+            if (char.match(/[a-zA-Z]/i) || char == '_' ||char.match(/[0-9]/) )  {
               this.state = 5;
               this.aux += char;
             } else {

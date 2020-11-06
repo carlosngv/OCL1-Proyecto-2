@@ -7,7 +7,7 @@ services:
         restart: always
         build: ./Frontend 
         ports:
-            - "3100:3100"
+            - "3900:3900"
         volumes:
             - ./Frontend:/usr/src/app/Frontend
     python-server:
