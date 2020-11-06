@@ -20,7 +20,7 @@ El menú consta de las siguientes acciones:
 | ----------- | ----------------- | ----------  |
 | Abrir       |     Ambos         |  JavaScript |
 | Guardar     |   JavaScript      |  Python     |
-| Guardar Como|     Python        |  ---------  | 
+| Guardar Como|     Python        |     -       | 
 
 El usuario será capaz de ingresar el código fuente dentro de un editor de código y a lado dos terminales que muestran errores sintácticos (si es que surgen).
 
