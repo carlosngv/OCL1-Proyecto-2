@@ -3,7 +3,7 @@
 
 Como programadores a veces (no siempre) queremos usar la tecnología o lenguaje de programación que es más reciente o popular. Ya que usualmente, son los que tienen más información a la mano. Es por eso, que trabajar con sistemas heredados y querer replicar su funcionalidad con un lenguaje más actual o popular, se opta por la traducción de este mismo.
 
-Es por eso que se da la solución de dos traductores que tienen como entrada un lenguaje fuente en Java y que su salida es su respectiva traducción en JavaScript y Python. Esto para darle al usurio más de una opción de salida.
+Es por eso que se da la solución de dos traductores que tienen como entrada un lenguaje fuente en Java y que su salida es su respectiva traducción en JavaScript y Python. Esto para darle al usuario más de una opción de salida.
 
 ---
 
@@ -24,7 +24,7 @@ El menú consta de las siguientes acciones:
 
 El usuario será capaz de ingresar el código fuente dentro de un editor de código y a lado dos terminales que muestran errores sintácticos (si es que surgen).
 
-![main page](./Documentation/Screenshots/main.png "Aplicación web")
+![main page](./Documentation/Screenshots/main2.png "Aplicación web")
 
 Dos botones para analizar en cada lenguaje. Un menú en la parte superior, donde el usuario será capaz de descargar los reportes del árbol de análisis sintáctico y la salida, que es la traducción resultante de cada lenguaje. Puede abrir o guardar un nuevo archivo que será plasmado dentro del editor de código y listo para traducirse. De no analizarse correctamente, como se mención, en las terminales se mostrará el error y no será posible traducir y generar el AST.
 
