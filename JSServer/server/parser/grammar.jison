@@ -151,15 +151,16 @@ lista_clases: lista_clases sentencia_clase {
     $$.setChild($2);
     $$.traduction = $1.traduction + ' ' + $2.traduction;
 }
-            | lista_clases sentencia_interfaz {
-                $$ = new Node('LISTA_CLASES','');
-                $$.setChild($1);
-                $$.traduction = $1.traduction + ' ' + $2.traduction;
-            }
+            
             | sentencia_clase { 
                 $$ = new Node('LISTA_CLASES','');
                 $$.setChild($1);
                 $$.traduction = $1.traduction
+            }
+            | lista_clases sentencia_interfaz {
+                $$ = new Node('LISTA_CLASES','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction + ' ' + $2.traduction;
             }
             | sentencia_interfaz {
                 $$ = new Node('LISTA_CLASES','');
@@ -563,7 +564,7 @@ declaracion_variable: tipo lista_id  asignacion {
 
 lista_id: lista_id COMA ID {
     $$ = new Node('LISTA_ID', '');
-    $$.setChild('LISTA_ID');
+    $$.setChild($1);
     $$.setChild(new Node($2,'COMMA'));
     $$.setChild(new Node($3,'ID'));
     $$.traduction = $1.traduction + ' ' + $2 + ' ' + $3;
@@ -579,12 +580,12 @@ asignacion: ASIGNACION expresion PUNTO_COMA {
     $$.setChild(new Node($1, 'ASIGNACION'));
     $$.setChild($2);
     $$.setChild(new Node($3, 'PUNTO_COMA'));
-    $$.traduction = $1 + ' ' + $2.traduction + $3;
+    $$.traduction = $1 + ' ' + $2.traduction + $3 + '\n';
 }
           | PUNTO_COMA {
             $$ = new Node('ASIGNACION');
             $$.setChild(new Node($1, 'PUNTO_COMA'));
-            $$.traduction = $1;
+            $$.traduction = $1 + '\n';
           }; 
 
 sentencia_print: RESERVADA_SYSTEM PUNTO RESERVADA_OUT PUNTO opcion_print PARENTIZQ expresion PARENTDER PUNTO_COMA {
@@ -780,7 +781,7 @@ asignacion_simple: ID ASIGNACION expresion PUNTO_COMA {
     $$.setChild(new Node($1, 'ID'));
     $$.setChild(new Node($2, 'ASIGNACION'));
     $$.setChild($3);
-    $$.setChild(new Node($4, 'COMA'));
+    $$.setChild(new Node($4, 'PUNTO_COMA'));
     $$.traduction = $1 + ' ' + $2 + ' ' + $3.traduction + $4 + '\n';
 };
                  
@@ -918,7 +919,12 @@ expresion : MENOS expresion %prec UMENOS	{
               $$ = new Node('EXPRESION','');
               $$.setChild(new Node($1, 'FALSE'));
               $$.traduction = $1
-          }    
+          }   
+          | CHAR			         { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'CHAR'));
+              $$.traduction = ''+ $1 +'';
+          }   
           | STRING			         { 
               $$ = new Node('EXPRESION','');
               $$.setChild(new Node($1, 'STRING'));

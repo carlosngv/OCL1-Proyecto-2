@@ -1,87 +1,88 @@
-public interface interfaz {
-  public void helo(String h);
-} 
 
-/* vsdvds */
-
-public class prueba_1 {
+/* Ejemplo Mamalon */
 
 
-  public int fibonacci(int n) {
-      if (n > 1){
-          return fibonacci;  //función recursiva
 
-      } else if (n == 1 || n == 0) {  // caso base
-          return 1;
+public class Myclase { 
+    
+    String variable, variable1,variable2;
+    int constante=100/5*5/5+3+2-1*0+1;
+	int x=0, y, z=9;
+	x = true && false;
+	
+	mifuncion(x, "cadena", true);
 
-      } else { //error
-          System.out.println("Debes ingresar un tamaño mayor o igual a 1, ingresaste: " + n);
-          return -1; 
-          
+  
+   public void MyMetodo(){
+      String nombre="myMetodo";
+      int x , y;
+      x=10;
+      y=11;
+      int variable=3+3-5/5*10;
+      System.out.println("myMetodo");
+      System.out.print(x);
+  }
+  public void MyMetodo2(int x){
+      int valor=x;
+      System.out.println(x);
+      for(int f; x<=f; f++){
+          System.out.println("HOla");
       }
+      
+     //hola
   }
 
+  public void Contador(){
+        int contador = 0 ;
+        do{
+            System.out.println ("Contador" + (contador + 1) );
+            contador ++;
+        } while (contador<-(-7));
+         
+          System.out.println(contador + "va aumentando");
+    }
 
-  public int Ack(int m, int n){
-      if (m == 0) {
-          return n + 1;
+    public static void main(String[] args ){
+      
+      System.out.println("ESTE ES EL MAIN");
+    } 
 
-      } else if (n == 0) {
-          return Ack;
-
-      } else {
-          return Ack;
-      }
+public int testif(String valor){
+        int contador = valor ;
+        if(valor==10){
+            //imprime
+            for(int f; x<=f; f++){
+                System.out.println(f);
+            }
+        } else if (valor>10){
+            
+            System.out.println("x");
+        
+        }else{
+            System.out.println("x");
+			continue;
+        }
+		
+		while(true) {
+			
+			break;
+			
+		}
+        
+	return 10;
   }
-
-
-  public static void main(String[] args) {
-      int num = 32465;
-
-      System.out.println("El factorial de " + num + " es: " + 12);
-
-  }
-
-   
-  public int factorial(int num){
-      if(num == 0){
-          return 1;
-      } else {
-          return num * factorial;
-      }
-  }
-
-  public helo(String h){
-      return "Bienvenido a Compiladores 1 " + h;
-  }
+  
+  int variable = !(((a < 10) == (10 > 10)) && ((a <= 10) != (10 >= 10)) || (4 + 4 - 4 * 4 / 6) ^ (Hola++) || (Hola--) - -(-7));
+  
 
 }
 
-public class clase {
 
-  public int incremento(int a){
-      return a++;
-  }
-
-  public int decremento(int a){
-      return a--;
-  }
-
-
-  public static void main(String[] args) {
-      //uso del ciclo for
-
-      for(int x=0;x<100;x++){
-          for(double y=0.0;y<100;y++){
-              System.out.println("Pares de numeros: "+ x + " ," + y );
-          }
-      }
-
-  }
-
-}                
-
-public interface Modificacion {
-  public int incremento(int a);
-  public int decremento(int a);
+public interface hola {
+	
+	public int metodo(int a, int b);
+	public void Hola();
+	
 }
+
+ 

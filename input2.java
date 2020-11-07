@@ -107,22 +107,19 @@ public class clase {
 
 public class error {
 
-    /*
-    * Recuperacion mediante
-    * modo panico
-    */
+
 
     public void recuperarse(){
         double x = 5-3*2-4;
         String s = "Texto cadena";
         char y = '3';
         int x = 8;
-        boolean True = true && false ! true || true !!!! false && true;
+       // boolean True = true && false ! true || true !!!! false && true;
     }
 
 
     public void declaraciones(){
-        String s = "",t,r,i="Compi",n="1",g="2020";
+        //String s = "",t,r,i="Compi",n="1",g="2020";
         int pi = 3.14159265358979323846;
     }
 
@@ -131,21 +128,16 @@ public class error {
         int x = 1;
  
         // Salir cuando x llega a ser mayor que 4
-        while (x <= 4)
-        {
+        while (x <= 4){
             System.out.println("Valor de x: " + x);
  
             //incrementa el valor de x para la siguiente iteración
             x++;
         }
 
-
-        do {   System.out.print ("Contando... " + (contador + 1) );
-
+        do {   
+            System.out.print("Contando... " + contador + 1 );
             contador++;
-
         } while (contador < 10); 
     }
-
-
 }

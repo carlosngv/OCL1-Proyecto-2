@@ -1,5 +1,7 @@
 class interfaz:
 	self.helo(h)
+class interfaz_2:
+	self.helo(h)
 class prueba_1:
 	def fibonacci(n):
 		if n > 1 :
@@ -67,25 +69,23 @@ class clase:
  		main()
 
 class error:
-	#  Recuperacion mediante modo panico
 	def recuperarse():
 		x = 5 - 3 * 2 - 4 
 		s = "Texto cadena" 
 		y = 3 
 		x = 8 
-		# boolean True = true && false ! true || true !!!! false && true;
+		#  boolean True = true && false ! true || true !!!! false && true;
 
 	def declaraciones():
-		# String s = "",t,r,i="Compi",n="1",g="2020";
+		s , a, t, r, i= "Compi" 
 		pi = 3.14159265358979323846 
 
 	def main():
 		x = 1 
-		#  Salir cuando x llega a ser mayor que 4
-		while x <= 4 :
+		while x < 4 :
 			print("Valor de x: " + x )
 			# incrementa el valor de x para la siguiente iteración
-
+			x += 1
 		while contador < 10 :
 			print("Contando... " + contador + 1 )
 			contador += 1
