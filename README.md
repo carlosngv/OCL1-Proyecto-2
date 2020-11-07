@@ -24,7 +24,7 @@ El menú consta de las siguientes acciones:
 
 El usuario será capaz de ingresar el código fuente dentro de un editor de código y a lado dos terminales que muestran errores sintácticos (si es que surgen).
 
-![main page](./Documentation/Screenshots/main.png "Aplicación web")
+![main page](./Documentation/Screenshots/main2.png "Aplicación web")
 
 Dos botones para analizar en cada lenguaje. Un menú en la parte superior, donde el usuario será capaz de descargar los reportes del árbol de análisis sintáctico y la salida, que es la traducción resultante de cada lenguaje. Puede abrir o guardar un nuevo archivo que será plasmado dentro del editor de código y listo para traducirse. De no analizarse correctamente, como se mención, en las terminales se mostrará el error y no será posible traducir y generar el AST.
 
