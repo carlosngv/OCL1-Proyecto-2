@@ -2,7 +2,6 @@ const { Router } = require("express");
 const generateHTML = require('../reports/tokenList');
 const generateHTMLErrors = require('../reports/errorList');
 const fs = require("fs");
-
 const Scanner = require("../scanner/scanner");
 const Parser = require("../parser/parser2");
 const scanRouter = Router();

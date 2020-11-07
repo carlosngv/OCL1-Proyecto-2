@@ -161,19 +161,19 @@ class Parser {
 
   SentenciaClase() {
     // public class { LISTA_DECLARACION_METODOS_FUNCIONES }
-    if(!this.primeraSentenciaClase){
+    //if(!this.primeraSentenciaClase){
       this.astString += "n" + this.nodeCont + '[label="public"];\n';
       this.nodeCont++;
-    } 
+    //} 
     this.astString += "n" + this.nodeCont + '[label="SENTENCIA_CLASE"];\n';
     let father = "n" + this.nodeCont;
-    if (!this.primeraSentenciaClase) {
+    //if (!this.primeraSentenciaClase) {
       this.astString += "n0->n" + (this.nodeCont - 1) + ";\n";
       this.astString += "n0->n" + this.nodeCont + ";\n";
       this.primeraSentenciaClase = true;
-    } else {
+    /*} else {
       this.astString += this.padreListaClases + "->n" + this.nodeCont + ";\n";
-    }
+    }*/
     this.nodeCont++;
     this.stringTraduccion += this.preAnalysis.value + " ";
     this.astString += "n" + this.nodeCont + '[label="class"];\n';
@@ -477,7 +477,7 @@ class Parser {
       this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;
       this.match("RIGHT_PARENT");
-      this.stringTraduccion += this.preAnalysis.value + "\n";
+      this.stringTraduccion += "\n";
       this.astString += "n" + this.nodeCont + '[label=";"];\n';
       this.astString += this.padreDeclaracionParametrosInterfaz + "->n" + this.nodeCont + ";\n";
       this.nodeCont++;

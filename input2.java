@@ -21,9 +21,9 @@ public interface interfaz {
 public class prueba_1 {
 
 
-    int fibonacci(int n) {
+    public int fibonacci(int n) {
         if (n > 1){
-            return fibonacci(n-1) + fibonacci(n-2);  //función recursiva
+            return fibonacci;  //función recursiva
 
         } else if (n == 1 || n == 0) {  // caso base
             return 1;
@@ -36,15 +36,15 @@ public class prueba_1 {
     }
 
 
-    int Ack(int m, int n){
+    public int Ack(int m, int n){
         if (m == 0) {
             return n + 1;
 
         } else if (n == 0) {
-            return Ack(m - 1, 1);
+            return "adios";
 
         } else {
-            return Ack(m - 1, Ack(m, n - 1));
+            return "hola";
         }
     }
 
@@ -52,7 +52,7 @@ public class prueba_1 {
     public static void main(String[] args) {
         int num = 32465;
 
-        System.out.println("El factorial de " + num + " es: " + factorial(num));
+        System.out.println("El factorial de " + num + " es: 1111111");
 
     }
 
@@ -61,11 +61,11 @@ public class prueba_1 {
         if(num == 0){
             return 1;
         } else {
-            return num * factorial(num-1);
+            return num * factorial;
         }
     }
 
-    public helo(String h){
+    public String helo(String h){
         return "Bienvenido a Compiladores 1 " + h;
     }
 
@@ -115,7 +115,7 @@ public class error {
     public void recuperarse(){
         double x = 5-3*2-4;
         String s = "Texto cadena";
-        char y = '3'
+        char y = '3';
         int x = 8;
         boolean True = true && false ! true || true !!!! false && true;
     }
@@ -126,7 +126,7 @@ public class error {
         int pi = 3.14159265358979323846;
     }
 
-    public static void main(String args[])
+    public static void main(String[] args)
     {
         int x = 1;
  
@@ -142,7 +142,7 @@ public class error {
 
         do {   System.out.print ("Contando... " + (contador + 1) );
 
-            contador += 1;
+            contador++;
 
         } while (contador < 10); 
     }

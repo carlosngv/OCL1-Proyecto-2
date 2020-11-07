@@ -1,7 +1,23 @@
+/********************************************************
+ *********************************************************
+ *********************COMPILADORES 1**********************
+ *********************************************************
+ ********************SEGUNDO SEMESTRE*********************
+ *********************************************************
+ **************************2020***************************
+ *********************************************************
+ *******************ENTRADA DE PRUEBA*********************
+ *********************************************************
+ ***********************PROYECTO 2************************
+ *********************************************************
+ ********************************************************/
+class interfaz {
+    public helo(h);
+}
 class prueba_1 {
     constructor() {}
 
-    function fibonacci(var n) {
+    function fibonacci(n) {
 
         if (n > 1) {
 
@@ -22,8 +38,7 @@ class prueba_1 {
         }
     }
 
-    function Ack(var m,
-        var n) {
+    function Ack(m, n) {
 
         if (m == 0) {
 
@@ -43,10 +58,10 @@ class prueba_1 {
 
     function main() {
         var num = 32465;
-        console.log("El factorial de " + num + " es:")
+        console.log("El factorial de " + num + " es: " + 12)
     }
 
-    function factorial(var num) {
+    function factorial(num) {
 
         if (num == 0) {
 
@@ -59,9 +74,41 @@ class prueba_1 {
         }
     }
 
-    function helo(var h) {
+    function helo(h) {
 
         return "Bienvenido a Compiladores 1 " + h;
 
+    }
+}
+class Modificacion {
+    public
+    var incremento(a);
+    public
+    var decremento(a);
+}
+class clase {
+    constructor() {}
+
+    function incremento(a) {
+
+        return a++;
+
+    }
+
+    function decremento(a) {
+
+        return a--;
+
+    }
+
+    function main() {
+        //uso del ciclo for
+
+        for (var x = 0; x < 100; x++) {
+
+            for (var y = 0.0; y < 100; y++) {
+                console.log("Pares de numeros: " + x + " ," + y)
+            }
+        }
     }
 }

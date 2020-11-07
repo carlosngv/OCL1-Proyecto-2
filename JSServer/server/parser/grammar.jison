@@ -151,7 +151,17 @@ lista_clases: lista_clases sentencia_clase {
     $$.setChild($2);
     $$.traduction = $1.traduction + ' ' + $2.traduction;
 }
+            | lista_clases sentencia_interfaz {
+                $$ = new Node('LISTA_CLASES','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction + ' ' + $2.traduction;
+            }
             | sentencia_clase { 
+                $$ = new Node('LISTA_CLASES','');
+                $$.setChild($1);
+                $$.traduction = $1.traduction
+            }
+            | sentencia_interfaz {
                 $$ = new Node('LISTA_CLASES','');
                 $$.setChild($1);
                 $$.traduction = $1.traduction
@@ -294,6 +304,7 @@ sentencia_interfaz: RESERVADA_PUBLIC RESERVADA_INTERFACE ID bloque_declaracion_f
     $$.setChild(new Node($2,'INTERFACE'));
     $$.setChild(new Node($3,'ID'));
     $$.setChild(new Node($4));
+    $$.traduction =  'class' + ' ' + $3+ $4.traduction;
 };
 
 bloque_declaracion_funcion: LLAVEIZQ lista_declaracion_funciones LLAVEDER { 
@@ -301,11 +312,14 @@ bloque_declaracion_funcion: LLAVEIZQ lista_declaracion_funciones LLAVEDER {
     $$.setChild(new Node($1,'LLAVEIZQ'));
     $$.setChild($2);
     $$.setChild(new Node($3,'LLAVEDER'));
+    $$.traduction = $1 + '\n' + $2.traduction + '\n' + $3;
 }
                      | LLAVEIZQ LLAVEDER { 
                         $$ = new Node('BLOQUE_DECLARACION_FUNC', '');
                         $$.setChild(new Node($1,'LLAVEIZQ'));
                         $$.setChild(new Node($3,'LLAVEDER'));
+                        $$.traduction = $1 + $2;
+
                      }
                      ;
 
@@ -313,10 +327,12 @@ lista_declaracion_funciones: lista_declaracion_funciones declaracion_funcion {
     $$ = new Node('LISTA_DECLARACION_FUNC', '');
     $$.setChild($1);
     $$.setChild($2);
+    $$.traduction = $1.traduction + $2.traduction
 }
                            | declaracion_funcion { 
                                 $$ = new Node('LISTA_DECLARACION_FUNC', '');
                                 $$.setChild($1);
+                                $$.traduction = $1.traduction;
                            }
                            ;
 
@@ -327,6 +343,7 @@ declaracion_funcion: RESERVADA_PUBLIC tipo ID PARENTIZQ declaracion_parametros_f
     $$.setChild(new Node($3,'ID'));
     $$.setChild(new Node($4,'PARENTIZQ'));
     $$.setChild($5);
+    $$.traduction = $1 + ' ' + $2.traduction + ' ' + $3 + $4 + $5.traduction;
 };
 
 declaracion_parametros_funcion: lista_parametros PARENTDER PUNTO_COMA { 
@@ -334,11 +351,13 @@ declaracion_parametros_funcion: lista_parametros PARENTDER PUNTO_COMA {
     $$.setChild($1);
     $$.setChild(new Node($2,'PARENTDER'));
     $$.setChild(new Node($3,'PUNTO_COMA'));
+    $$.traduction = $1.traduction + $2 + $3;
 }
                               | PARENTDER PUNTO_COMA  { 
                                 $$ = new Node('DECLARACION_PARAMETROS_FUNC', '');
                                 $$.setChild(new Node($1,'PARENTDER'));
                                 $$.setChild(new Node($2,'PUNTO_COMA'));  
+                                $$.traduction = $1 + $2;
                               };
 
 lista_parametros: lista_parametros COMA tipo ID { 
@@ -347,13 +366,13 @@ lista_parametros: lista_parametros COMA tipo ID {
     $$.setChild(new Node($2, 'COMA'));
     $$.setChild($3);
     $$.setChild(new Node($4, 'ID'));
-    $$.traduction = $1.traduction + $2 + $3.traduction + $4;
+    $$.traduction = $1.traduction + $2 + $4;
     }
                 | tipo ID { 
                     $$ = new Node('LISTA_PARAMETROS', '');
                     $$.setChild($1);
                     $$.setChild(new Node($2, 'ID'));
-                    $$.traduction = $1.traduction + $2;
+                    $$.traduction =  $2;
                 };
 
 
@@ -723,7 +742,24 @@ sentencia_return_funciones: RESERVADA_RETURN expresion PUNTO_COMA {
     $$.setChild($2);
     $$.setChild(new Node($3, 'PUNTO_COMA'));
     $$.traduction = '\n' + $1 + ' '+ $2.traduction +  $3 + '\n';
-};              
+}
+    | RESERVADA_RETURN ID DECR PUNTO_COMA {
+        $$ = new Node('SENTENCIA_RETURN_FUNCIONES','');
+        $$.setChild(new Node($1, 'RETURN'));
+        $$.setChild(new Node($2, 'ID'));
+        $$.setChild(new Node($3, 'DECR'));
+        $$.setChild(new Node($4, 'PUNTO_COMA'));
+        $$.traduction = '\n' + $1 + ' '+ $2 +  $3 + $4 + '\n';
+    }
+    | RESERVADA_RETURN ID INCR PUNTO_COMA {
+        $$ = new Node('SENTENCIA_RETURN_FUNCIONES','');
+        $$.setChild(new Node($1, 'RETURN'));
+        $$.setChild(new Node($2, 'ID'));
+        $$.setChild(new Node($3, 'INCR'));
+        $$.setChild(new Node($4, 'PUNTO_COMA'));
+        $$.traduction = '\n' + $1 + ' '+ $2 +  $3 + $4 + '\n';
+    }
+;              
 
 sentencia_break: RESERVADA_BREAK PUNTO_COMA { 
     $$ = new Node('SENTENCIA_BREAK','');
@@ -894,6 +930,20 @@ expresion : MENOS expresion %prec UMENOS	{
               $$.setChild($2);
               $$.setChild(new Node($3, 'PARENTDER'));
               $$.traduction = $1 + $2.traduction + $3;
+          }
+          | ID DECR PUNTO_COMA                { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'ID'));
+              $$.setChild(new Node($2, 'DECR'));
+              $$.setChild(new Node($3, 'PUNTO_COMA'));
+              $$.traduction = $1 + $2 + $3;
+          }
+          | ID INCR PUNTO_COMA                { 
+              $$ = new Node('EXPRESION','');
+              $$.setChild(new Node($1, 'ID'));
+              $$.setChild(new Node($2, 'INCR'));
+              $$.setChild(new Node($3, 'PUNTO_COMA'));
+              $$.traduction = $1 + $2 + $3;
           }
           | ID                  { 
               $$ = new Node('EXPRESION','');
