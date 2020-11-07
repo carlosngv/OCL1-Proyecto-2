@@ -3,7 +3,7 @@
 
 Como programadores a veces (no siempre) queremos usar la tecnología o lenguaje de programación que es más reciente o popular. Ya que usualmente, son los que tienen más información a la mano. Es por eso, que trabajar con sistemas heredados y querer replicar su funcionalidad con un lenguaje más actual o popular, se opta por la traducción de este mismo.
 
-Es por eso que se da la solución de dos traductores que tienen como entrada un lenguaje fuente en Java y que su salida es su respectiva traducción en JavaScript y Python. Esto para darle al usurio más de una opción de salida.
+Es por eso que se da la solución de dos traductores que tienen como entrada un lenguaje fuente en Java y que su salida es su respectiva traducción en JavaScript y Python. Esto para darle al usuario más de una opción de salida.
 
 ---
 
